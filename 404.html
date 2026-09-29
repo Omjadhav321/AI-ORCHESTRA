@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Page not found — AI-ORCHESTRA</title>
+<meta name="theme-color" content="rgb(253,244,210)" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --cream:rgb(253,244,210);--blue-600:rgb(64,116,158);--blue-wash:rgba(176,205,230,.34);
+    --blue-bd:rgba(86,138,180,.50);--rose-wash:rgba(148,109,109,.16);
+    --bg:rgb(252,248,238);--surface:rgb(255,253,247);--line-2:rgba(126,96,90,.26);
+    --muted:rgb(104,78,76);--faint:rgb(126,100,96);--cream-ink:rgb(58,46,20);
+    --blue-700:rgb(48,92,132);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;line-height:1.55;
+    color:rgb(46,30,30);background:var(--bg);min-height:100vh;min-height:100dvh;
+    display:grid;place-items:center;padding:24px;-webkit-font-smoothing:antialiased;
+  }
+  :focus-visible{outline:2px solid var(--blue-600);outline-offset:3px;border-radius:3px}
+  .box{
+    max-width:520px;width:100%;text-align:center;background:var(--surface);
+    border:1px solid var(--line-2);border-radius:12px;padding:36px 28px;
+  }
+  .mark{
+    width:42px;height:42px;border-radius:11px;background:var(--blue-600);color:var(--cream);
+    display:grid;place-items:center;font-weight:700;margin:0 auto 20px;
+  }
+  .code{
+    display:inline-block;padding:4px 11px;border-radius:999px;background:var(--rose-wash);
+    font-size:.7rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:rgb(134,84,84);
+    margin-bottom:14px;
+  }
+  h1{font-size:1.35rem;font-weight:700;letter-spacing:-.01em}
+  p{margin-top:10px;color:var(--muted);font-size:.88rem}
+  .links{display:grid;gap:9px;margin-top:26px;text-align:left}
+  a{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 15px;
+    background:var(--bg);border:1px solid var(--line-2);border-radius:8px;
+    text-decoration:none;color:var(--blue-700);font-weight:600;font-size:.85rem;
+  }
+  a:hover{background:var(--blue-wash);border-color:var(--blue-bd)}
+  a span{color:var(--muted);font-weight:400;font-size:.76rem}
+  .back{display:inline-block;margin-top:20px;font-size:.8rem;color:var(--faint);text-decoration:none}
+  .back:hover{color:var(--blue-700);text-decoration:underline}
+</style>
+</head>
+<body>
+<main class="box">
+  <span class="mark" aria-hidden="true">AI</span>
+  <span class="code">Error 404</span>
+  <h1>We couldn't find that page</h1>
+  <p>The link may be out of date, or the address was typed incorrectly. Pick your portal below to carry on.</p>
+
+  <nav class="links" aria-label="Portals">
+    <a href="/userside/">My Hospital Visit <span>Citizens &amp; patients</span></a>
+    <a href="/govoffice/">District e-Gov Kendra <span>Government officers</span></a>
+    <a href="/hospitalside/">Hospital Operations <span>Doctors &amp; staff</span></a>
+  </nav>
+
+  <a class="back" href="/">Back to the entry page</a>
+</main>
+</body>
+</html>

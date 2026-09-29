@@ -1,0 +1,25 @@
+version: '3.8'
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_HOST=db
+      - AI_SERVICE_URL=http://ai_service:8000
+    depends_on:
+      - db
+      - ai_service
+
+  ai_service:
+    build: ./ai_service
+    ports:
+      - "8000:8000"
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: ai_orchestra
+    ports:
+      - "3306:3306"
