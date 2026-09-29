@@ -1,0 +1,2518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>AI-ORCHESTRA — My Hospital Visit</title>
+<meta name="description" content="Check in with ABHA, get a live token, track your queue position in real time, manage appointments and download reports." />
+<meta name="theme-color" id="themeMeta" content="rgb(253,244,210)" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    /* palette: dusty rose, cream, light blue, lilac */
+    --rose:rgb(148,109,109);
+    --cream:rgb(253,244,210);
+    --blue:rgb(176,205,230);
+    --lilac:rgb(162,144,183);
+
+    /* deep shades of the same four hues — for ink and solid fills */
+    --rose-700:rgb(112,68,68);
+    --rose-600:rgb(134,84,84);
+    --rose-wash:rgba(148,109,109,.16);
+    --rose-bd:rgba(148,109,109,.46);
+    --blue-700:rgb(48,92,132);
+    --blue-600:rgb(64,116,158);
+    --blue-wash:rgba(176,205,230,.34);
+    --blue-bd:rgba(86,138,180,.50);
+    --lilac-700:rgb(92,74,118);
+    --lilac-600:rgb(112,94,138);
+    --lilac-wash:rgba(162,144,183,.26);
+    --cream-deep:rgb(246,236,204);
+    --cream-ink:rgb(58,46,20);
+    --on-deep:rgb(28,22,42);
+
+    /* emergency red — defined once and never re-themed: an SOS control has to
+       read as "stop" in both the hospital and the government palette */
+    --sos:rgb(198,42,42);
+    --sos-600:rgb(176,30,30);
+    --sos-700:rgb(132,18,18);
+    --sos-wash:rgba(198,42,42,.12);
+    --sos-bd:rgba(176,30,30,.42);
+    --on-sos:rgb(255,246,246);
+
+    /* bright light base */
+    --bg:rgb(252,248,238);
+    --surface:rgb(255,253,247);
+    --surface-2:rgb(250,242,224);
+    --surface-3:rgb(244,232,206);
+    --inset:rgb(250,246,235);
+
+    --line:rgba(126,96,90,.16);
+    --line-2:rgba(126,96,90,.26);
+    --line-3:rgba(126,96,90,.42);
+
+    --txt:rgb(46,30,30);
+    --txt-2:rgb(80,58,56);
+    --muted:rgb(104,78,76);
+    --faint:rgb(126,100,96);
+
+    --accent:var(--blue);
+    --accent-ink:var(--blue-700);
+    --accent-wash:var(--blue-wash);
+    --accent-bd:var(--blue-bd);
+    --on-accent:rgb(22,40,58);
+    --hover:rgba(176,205,230,.22);
+    --shadow:0 10px 26px rgba(96,66,60,.16);
+
+    /* translucent overlays on solid fills — recoloured per theme */
+    --on-deep-2:rgba(28,22,42,.62);
+    --on-deep-3:rgba(28,22,42,.74);
+    --cream-2:rgba(253,244,210,.78);
+    --cream-3:rgba(253,244,210,.88);
+
+    /* chrome bits that were hardcoded before the theme switch */
+    --sel:rgba(176,205,230,.55);
+    --sb:rgb(228,215,185);
+    --sb-h:rgb(210,191,154);
+    --sb-line:rgba(126,96,90,.22);
+    --chev:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234A3230' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");
+
+    --r:12px;
+    --r-sm:6px;
+    --r-xs:4px;
+    --maxw:1140px;
+  }
+
+  /* ---------- THEMES ----------
+     The four base hues keep their variable names; a theme only changes the
+     values. `html[data-sector=…]` themes the live app, `.theme-…` previews
+     the same palette on a single element (used by the sector chooser). */
+  html[data-sector="hospital"],.theme-hospital{
+    --rose:rgb(148,109,109);
+    --cream:rgb(253,244,210);
+    --blue:rgb(176,205,230);
+    --lilac:rgb(162,144,183);
+    --rose-700:rgb(112,68,68);
+    --rose-600:rgb(134,84,84);
+    --rose-wash:rgba(148,109,109,.16);
+    --rose-bd:rgba(148,109,109,.46);
+    --blue-700:rgb(48,92,132);
+    --blue-600:rgb(64,116,158);
+    --blue-wash:rgba(176,205,230,.34);
+    --blue-bd:rgba(86,138,180,.50);
+    --lilac-700:rgb(92,74,118);
+    --lilac-600:rgb(112,94,138);
+    --lilac-wash:rgba(162,144,183,.26);
+    --cream-deep:rgb(246,236,204);
+    --cream-ink:rgb(58,46,20);
+    --on-deep:rgb(28,22,42);
+    --bg:rgb(252,248,238);
+    --surface:rgb(255,253,247);
+    --surface-2:rgb(250,242,224);
+    --surface-3:rgb(244,232,206);
+    --inset:rgb(250,246,235);
+    --line:rgba(126,96,90,.16);
+    --line-2:rgba(126,96,90,.26);
+    --line-3:rgba(126,96,90,.42);
+    --txt:rgb(46,30,30);
+    --txt-2:rgb(80,58,56);
+    --muted:rgb(104,78,76);
+    --faint:rgb(126,100,96);
+    --on-accent:rgb(22,40,58);
+    --hover:rgba(176,205,230,.22);
+    --shadow:0 10px 26px rgba(96,66,60,.16);
+    --on-deep-2:rgba(28,22,42,.62);
+    --on-deep-3:rgba(28,22,42,.74);
+    --cream-2:rgba(253,244,210,.78);
+    --cream-3:rgba(253,244,210,.88);
+    --sel:rgba(176,205,230,.55);
+    --sb:rgb(228,215,185);
+    --sb-h:rgb(210,191,154);
+    --sb-line:rgba(126,96,90,.22);
+    --chev:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234A3230' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");
+  }
+
+  /* government services — terracotta, apricot, pale yellow-green, sage */
+  html[data-sector="government"],.theme-government{
+    --rose:rgb(234,144,122);
+    --cream:rgb(244,247,197);
+    --blue:rgb(170,205,190);
+    --lilac:rgb(251,198,135);
+    --rose-700:rgb(132,60,48);
+    --rose-600:rgb(166,82,66);
+    --rose-wash:rgba(234,144,122,.16);
+    --rose-bd:rgba(234,144,122,.50);
+    --blue-700:rgb(46,100,82);
+    --blue-600:rgb(74,132,110);
+    --blue-wash:rgba(170,205,190,.34);
+    --blue-bd:rgba(74,132,110,.50);
+    --lilac-700:rgb(160,110,48);
+    --lilac-600:rgb(198,143,72);
+    --lilac-wash:rgba(251,198,135,.30);
+    --cream-deep:rgb(233,240,176);
+    --cream-ink:rgb(58,62,20);
+    --on-deep:rgb(74,46,14);
+    --bg:rgb(249,251,238);
+    --surface:rgb(253,254,244);
+    --surface-2:rgb(247,250,229);
+    --surface-3:rgb(238,243,214);
+    --inset:rgb(248,251,235);
+    --line:rgba(110,116,70,.16);
+    --line-2:rgba(110,116,70,.28);
+    --line-3:rgba(110,116,70,.44);
+    --txt:rgb(44,42,22);
+    --txt-2:rgb(72,72,38);
+    --muted:rgb(96,96,56);
+    --faint:rgb(118,118,76);
+    --on-accent:rgb(22,46,38);
+    --hover:rgba(170,205,190,.22);
+    --shadow:0 10px 26px rgba(88,96,58,.16);
+    --on-deep-2:rgba(74,46,14,.62);
+    --on-deep-3:rgba(74,46,14,.76);
+    --cream-2:rgba(244,247,197,.82);
+    --cream-3:rgba(244,247,197,.90);
+    --sel:rgba(170,205,190,.60);
+    --sb:rgb(228,235,196);
+    --sb-h:rgb(206,220,160);
+    --sb-line:rgba(110,116,70,.24);
+    --chev:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233A3E14' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6  6 6-6'/></svg>");
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+    font-size:14px;line-height:1.55;color:var(--txt);background:var(--bg);
+    -webkit-font-smoothing:antialiased;min-height:100vh;min-height:100dvh;
+    -webkit-text-size-adjust:100%;
+    -webkit-tap-highlight-color:rgba(126,96,90,.18);
+  }
+  :focus-visible{outline:2px solid var(--blue-600);outline-offset:2px;border-radius:3px}
+  ::selection{background:var(--sel);color:var(--txt)}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--sb);border:2px solid var(--bg);border-radius:10px}
+  ::-webkit-scrollbar-thumb:hover{background:var(--sb-h)}
+  .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+  .mono{font-family:'JetBrains Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  abbr{border-bottom:1px dotted var(--line-3);cursor:help;text-decoration:none}
+  .skip{position:absolute;left:12px;top:-64px;z-index:300;padding:10px 15px;background:var(--blue-600);color:var(--cream);border-radius:var(--r-sm);font-size:.82rem;font-weight:600;transition:top .18s}
+  .skip:focus{top:12px}
+
+  /* ---------- BAR ---------- */
+  .bar{
+    position:sticky;top:0;z-index:50;background:var(--cream);border-bottom:1px solid var(--line-2);
+    padding-top:env(safe-area-inset-top);
+  }
+  .bar-in{max-width:var(--maxw);margin:0 auto;padding:0 28px;height:60px;display:flex;align-items:center;gap:14px}
+  .mark{
+    width:30px;height:30px;border-radius:var(--r-xs);display:grid;place-items:center;flex:none;
+    background:var(--rose-600);color:var(--cream);font-weight:700;font-size:.9rem;
+  }
+  /* min-width:0 lets the wordmark give up width before the actions do, so a
+     fifth control in .bar-right can never push the row off screen */
+  .brand{min-width:0;overflow:hidden}
+  .brand b{display:block;font-size:.9rem;font-weight:600;letter-spacing:-.01em;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .brand span{display:block;font-size:.7rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bar-right{margin-left:auto;flex:none;display:flex;align-items:center;gap:10px}
+  .facility{display:flex;align-items:center;gap:7px;font-size:.76rem;color:var(--txt-2);padding:6px 10px;border:1px solid var(--line-2);border-radius:var(--r-xs);background:var(--surface-2)}
+  .icon-btn{position:relative;width:32px;height:32px;display:grid;place-items:center;flex:none;background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-sm);color:var(--txt-2);cursor:pointer}
+  .icon-btn:hover{background:var(--surface-3);color:var(--txt)}
+  .icon-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .who{display:flex;align-items:center;gap:9px;padding:4px 10px 4px 4px;border:1px solid var(--line-2);border-radius:100px;background:var(--surface-2)}
+  .who .av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--lilac);border:1px solid var(--lilac-600);color:var(--on-deep);font-size:.68rem;font-weight:600}
+  .who b{display:block;font-size:.76rem;font-weight:500;line-height:1.2}
+  .who span{display:block;font-size:.66rem;color:var(--muted)}
+
+  /* floating live-token bar — phones only, enabled further down */
+  .floater{display:none}
+
+  /* ---------- TABS ---------- */
+  .tabs{position:sticky;top:calc(60px + env(safe-area-inset-top));z-index:45;background:var(--bg);border-bottom:1px solid var(--line)}
+  .tabs-in{max-width:var(--maxw);margin:0 auto;padding:0 28px;display:flex;gap:2px;overflow-x:auto}
+  .tab{
+    position:relative;display:flex;align-items:center;gap:8px;height:46px;padding:0 14px;flex:none;
+    background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);
+    font-size:.84rem;font-weight:500;cursor:pointer;white-space:nowrap;
+  }
+  .tab svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .tab:hover{color:var(--txt-2)}
+  .tab[aria-selected="true"]{color:var(--txt);border-bottom:2px solid var(--blue-600);font-weight:600}
+  .tab .cnt{font-size:.68rem;padding:1px 6px;border-radius:100px;background:var(--surface-2);border:1px solid var(--line-2);color:var(--txt-2);font-variant-numeric:tabular-nums}
+
+  /* ---------- LAYOUT ---------- */
+  main{max-width:var(--maxw);margin:0 auto;padding:28px 28px 72px;scroll-margin-top:calc(112px + env(safe-area-inset-top))}
+  .view{display:none;flex-direction:column;gap:22px}
+  .view.is-active{display:flex}
+  .view-head h1{font-size:1.34rem;font-weight:600;letter-spacing:-.02em}
+  .view-head p{margin-top:6px;color:var(--txt-2);font-size:.86rem;max-width:70ch}
+  .cols{display:grid;gap:22px;align-items:start}
+  .c-2{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
+  .c-1-2{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr)}
+  .stack{display:flex;flex-direction:column;gap:22px}
+
+  /* ---------- PANELS ---------- */
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);min-width:0}
+  .panel-pad{padding:24px 26px 26px}
+  .panel-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 22px;border-bottom:1px solid var(--line)}
+  .panel-pad>.panel-head{padding:0 0 16px;margin-bottom:22px;border-bottom:0}
+  .panel-title{display:flex;align-items:center;gap:9px;font-size:.87rem;font-weight:600}
+  .panel-title svg{width:16px;height:16px;fill:none;stroke:var(--accent-ink);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  .panel-note{margin-left:auto;font-size:.75rem;color:var(--muted)}
+  .step-no{
+    width:20px;height:20px;border-radius:var(--r-xs);display:grid;place-items:center;flex:none;
+    background:var(--surface-3);border:1px solid var(--line-2);color:var(--muted);
+    font-size:.66rem;font-weight:600;
+  }
+
+  /* ---------- PILLS ---------- */
+  .pill{
+    display:inline-flex;align-items:center;gap:5px;height:21px;padding:0 8px;border:1px solid;border-radius:var(--r-xs);
+    font-size:.655rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;
+  }
+  .pill .d{width:5px;height:5px;border-radius:1px;background:currentColor;flex:none}
+  .pill-blue{background:var(--blue);border-color:var(--blue-600);color:var(--on-accent)}
+  .pill-lilac{background:var(--lilac);border-color:var(--lilac-600);color:var(--on-deep)}
+  .pill-cream{background:var(--cream);border-color:var(--line-2);color:var(--cream-ink)}
+  .pill-rose{background:var(--rose-600);border-color:var(--rose-700);color:var(--cream)}
+  .pill-soft{background:var(--blue-wash);border-color:var(--blue-bd);color:var(--blue-700)}
+  .pill-dim{background:var(--surface-3);border-color:var(--line-2);color:var(--txt-2)}
+  .pill-xs{height:18px;padding:0 6px;font-size:.6rem}
+  .tag{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:var(--r-xs);background:var(--cream-deep);border:1px solid var(--line-2);color:var(--txt-2);font-size:.68rem;white-space:nowrap}
+
+  /* ---------- BUTTONS ---------- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:7px;height:36px;padding:0 15px;
+    background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-sm);
+    font-size:.83rem;font-weight:500;color:var(--txt);cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s;
+  }
+  .btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  .btn:hover{background:var(--surface-3);border-color:var(--line-3)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn-primary{background:var(--blue);border-color:var(--blue-600);color:var(--on-accent);font-weight:600}
+  .btn-primary:hover{background:var(--lilac);border-color:var(--lilac-600);color:var(--on-deep)}
+  .btn-lg{height:44px;padding:0 22px;font-size:.88rem;width:100%}
+  .btn-sm{height:28px;padding:0 10px;font-size:.76rem;border-radius:var(--r-xs)}
+  .btn-ghost{background:transparent;border-color:var(--line-2);color:var(--txt-2)}
+  .btn-quiet{background:transparent;border-color:transparent;color:var(--muted)}
+  .btn-danger{background:var(--rose-600);border-color:var(--rose-700);color:var(--cream);font-weight:500}
+  .btn-back-big{
+    display:inline-flex;align-items:center;gap:8px;padding:10px 16px;
+    background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-sm);
+    font-size:.85rem;font-weight:600;color:var(--txt);cursor:pointer;
+    transition:all .2s ease;
+  }
+  .btn-back-big:hover{background:var(--surface-3);border-color:var(--line-3);transform:translateX(-2px)}
+  .btn-back-big svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  /* ---------- EMERGENCY (SOS) ---------- */
+  /* one red that no theme can recolour, so the control always means "stop" */
+  .sos-btn{
+    display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 14px;flex:none;
+    background:var(--sos);border:1px solid var(--sos-700);border-radius:100px;
+    color:var(--on-sos);font-size:.78rem;font-weight:700;letter-spacing:.02em;cursor:pointer;
+    transition:background .15s,border-color .15s,transform .12s;
+  }
+  .sos-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  .sos-btn:hover{background:var(--sos-600);border-color:var(--sos-700)}
+  .sos-btn:active{transform:scale(.97)}
+  .sos-btn .d{width:6px;height:6px;border-radius:50%;background:currentColor;flex:none;animation:sos-pulse 1.6s ease-in-out infinite}
+  @keyframes sos-pulse{0%,100%{opacity:1}50%{opacity:.25}}
+
+  .sos-modal{
+    position:fixed;inset:0;z-index:200;display:grid;place-items:center;
+    padding:20px 20px calc(20px + env(safe-area-inset-bottom));
+    background:rgba(48,16,16,.58);
+  }
+  .sos-modal[hidden]{display:none}
+  .sos-card{
+    width:100%;max-width:440px;max-height:100%;display:flex;flex-direction:column;overflow:hidden;
+    background:var(--surface);border:1px solid var(--sos-bd);border-radius:var(--r);
+    box-shadow:0 20px 50px rgba(72,10,10,.40);
+  }
+  .sos-head{display:flex;align-items:center;gap:11px;padding:15px 18px;background:var(--sos);border-bottom:1px solid var(--sos-700);color:var(--on-sos);flex:none}
+  .sos-head .ic{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;flex:none;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.34)}
+  .sos-head .ic svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  .sos-head b{flex:1;min-width:0;display:block;font-size:.95rem;font-weight:700;line-height:1.25}
+  .sos-head small{display:block;font-size:.68rem;opacity:.86;font-weight:500}
+  .sos-x{width:30px;height:30px;display:grid;place-items:center;flex:none;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.30);border-radius:var(--r-sm);color:var(--on-sos);cursor:pointer}
+  .sos-x:hover{background:rgba(255,255,255,.26)}
+  .sos-x svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  .sos-body{overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
+  .sos-lead{margin:0;font-size:.83rem;line-height:1.55;color:var(--txt-2)}
+
+  .sos-call{
+    display:flex;align-items:center;gap:13px;width:100%;text-align:left;text-decoration:none;
+    padding:15px 16px;background:var(--sos);border:1px solid var(--sos-700);
+    border-radius:var(--r-sm);color:var(--on-sos);transition:background .15s,transform .12s;
+  }
+  .sos-call:hover{background:var(--sos-600)}
+  .sos-call:active{transform:scale(.99)}
+  .sos-call .ic{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;flex:none;background:rgba(255,255,255,.20);border:1px solid rgba(255,255,255,.36)}
+  .sos-call .ic svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  .sos-call .tx{flex:1;min-width:0}
+  .sos-call b{display:block;font-size:.9rem;font-weight:700;line-height:1.3}
+  .sos-call span{display:block;font-size:.7rem;opacity:.88;margin-top:1px}
+  .sos-call .num{flex:none;font-size:1.32rem;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+
+  .sos-sub{font-size:.68rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .sos-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:stretch}
+  .sos-alt{
+    display:flex;align-items:center;gap:9px;padding:11px 12px;text-decoration:none;
+    background:var(--sos-wash);border:1px solid var(--sos-bd);border-radius:var(--r-sm);
+    color:var(--sos-700);transition:background .15s;min-width:0;
+  }
+  .sos-alt:hover{background:rgba(198,42,42,.20)}
+  .sos-alt svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  .sos-alt .tx{flex:1;min-width:0}
+  .sos-alt b{display:block;font-size:.78rem;font-weight:600;line-height:1.3;overflow-wrap:anywhere}
+  .sos-alt span{display:block;font-size:.64rem;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sos-alt .num{font-size:.95rem;font-weight:700;font-variant-numeric:tabular-nums;flex:none}
+
+  .sos-note{display:flex;gap:9px;align-items:flex-start;padding:11px 12px;background:var(--sos-wash);border:1px solid var(--sos-bd);border-radius:var(--r-sm);color:var(--txt-2);font-size:.75rem;line-height:1.5}
+  .sos-note svg{width:15px;height:15px;fill:none;stroke:var(--sos-700);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none;margin-top:2px}
+  .sos-foot{padding:0 18px 18px;flex:none}
+  .sos-foot .btn{width:100%}
+
+  /* touch: no double-tap zoom delay, no grey flash on tap */
+  button,a,select,input,textarea,.tab,.seg button,.chan{touch-action:manipulation}
+
+  /* ---------- FORMS ---------- */
+  .field{margin-bottom:18px}
+  .field:last-child{margin-bottom:0}
+  .field>label{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:.72rem;font-weight:500;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+  .field .hint{margin-top:6px;font-size:.73rem;color:var(--muted);line-height:1.45}
+  .input,select.input,textarea.input{
+    width:100%;height:38px;padding:0 11px;background:var(--surface);border:1px solid var(--line-2);
+    border-radius:var(--r-sm);color:var(--txt);font:inherit;font-size:.85rem;transition:border-color .15s,box-shadow .15s;
+  }
+  textarea.input{height:auto;padding:10px 11px;resize:vertical;line-height:1.5}
+  .input::placeholder{color:var(--faint)}
+  .input:focus{outline:none;border-color:var(--blue-600);box-shadow:0 0 0 3px var(--blue-wash)}
+  select.input{
+    appearance:none;padding-right:30px;cursor:pointer;
+    background-image:var(--chev);
+    background-repeat:no-repeat;background-position:right 10px center;background-size:14px;
+  }
+  select.input option{background:var(--surface);color:var(--txt)}
+  .grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px}
+
+  .seg{display:flex;flex-wrap:wrap;gap:7px}
+  .seg button{
+    height:34px;padding:0 13px;background:var(--inset);border:1px solid var(--line-2);border-radius:var(--r-sm);
+    color:var(--txt-2);font-size:.8rem;cursor:pointer;transition:.15s;
+  }
+  .seg button:hover{border-color:var(--line-3);color:var(--txt)}
+  .seg button[aria-pressed="true"]{background:var(--blue);border-color:var(--blue-600);color:var(--on-accent);font-weight:600}
+
+  .chans{display:flex;flex-wrap:wrap;gap:8px}
+  .chan{display:flex;align-items:center;gap:9px;padding:9px 13px;background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-sm);cursor:pointer;transition:.15s}
+  .chan:hover{border-color:var(--line-3)}
+  .chan input{position:absolute;opacity:0;pointer-events:none}
+  .chan .box{width:16px;height:16px;border-radius:3px;border:1px solid var(--line-3);display:grid;place-items:center;flex:none;transition:.15s}
+  .chan .box svg{width:11px;height:11px;fill:none;stroke:var(--cream);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+  .chan:has(input:checked){border-color:var(--blue-bd);background:var(--blue-wash)}
+  .chan:has(input:checked) .box{background:var(--blue-600);border-color:var(--blue-600)}
+  .chan:has(input:checked) .box svg{opacity:1}
+  .chan:has(input:focus-visible){outline:2px solid var(--blue-600);outline-offset:2px}
+  .chan b{font-size:.8rem;font-weight:500}
+  .chan span{font-size:.7rem;color:var(--muted);display:block}
+
+  /* ---------- ABHA ---------- */
+  .abha-id{
+    display:flex;align-items:center;gap:12px;padding:16px 18px;border-radius:var(--r-sm);
+    background:var(--blue);border:1px solid var(--blue-600);
+  }
+  .abha-id .ic{width:34px;height:34px;border-radius:var(--r-xs);display:grid;place-items:center;flex:none;background:var(--cream);color:var(--rose-700)}
+  .abha-id .ic svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .abha-id b{display:block;font-size:.86rem;font-weight:600;color:var(--on-accent)}
+  .abha-id .n{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--on-accent);letter-spacing:-.01em;opacity:.85}
+  .rec{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;margin-top:16px}
+  .rec div{background:var(--surface);padding:12px 14px}
+  .rec .k{font-size:.63rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+  .rec .v{margin-top:3px;font-size:.82rem}
+  .alert-flag{display:flex;align-items:center;gap:8px;padding:11px 14px;border-radius:var(--r-sm);background:var(--rose-wash);border:1px solid var(--rose-bd);color:var(--rose-700);font-size:.79rem;font-weight:500;margin-top:12px}
+  .alert-flag svg{width:15px;height:15px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .flag-note{display:flex;align-items:center;gap:8px;padding:11px 14px;border-radius:var(--r-sm);background:var(--blue-wash);border:1px solid var(--blue-bd);color:var(--blue-700);font-size:.79rem;font-weight:500;margin-top:12px}
+  .flag-note::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+  .scan{
+    padding:30px 20px;border:1px dashed var(--line-2);border-radius:var(--r-sm);background:var(--surface-2);
+    text-align:center;color:var(--muted);font-size:.82rem;
+  }
+  .scan svg{width:26px;height:26px;margin:0 auto 12px;fill:none;stroke:var(--lilac-600);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+  .spin{width:15px;height:15px;border:2px solid var(--sb-line);border-top-color:var(--blue-600);border-radius:50%;animation:sp .7s linear infinite;display:inline-block;vertical-align:-2px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  /* ---------- SUMMARY / PREVIEW ---------- */
+  .sum{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden}
+  .sum div{background:var(--surface);padding:14px 16px}
+  .sum div:nth-child(4n+1){background:var(--blue-wash)}
+  .sum div:nth-child(4n+2){background:var(--lilac-wash)}
+  .sum div:nth-child(4n+3){background:var(--rose-wash)}
+  .sum div:nth-child(4n+4){background:var(--cream)}
+  .sum .k{font-size:.63rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+  .sum .v{margin-top:5px;font-size:1.16rem;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.2}
+  .sum .v small{font-size:.7rem;font-weight:500;color:var(--muted);letter-spacing:0}
+  .sum .m{margin-top:2px;font-size:.7rem;color:var(--muted)}
+
+  /* ---------- QUEUE BOARD ---------- */
+  .board{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+    border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface);
+  }
+  .board>div{padding:18px 20px;border-right:1px solid var(--line);background:var(--surface)}
+  .board>div:nth-child(1){background:var(--blue-wash)}
+  .board>div:nth-child(2){background:var(--lilac-wash)}
+  .board>div:nth-child(3){background:var(--cream)}
+  .board>div:last-child{border-right:0}
+  .board .k{font-size:.63rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .board .v{margin-top:7px;font-size:1.5rem;font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.1}
+  .board .v small{font-size:.72rem;font-weight:500;color:var(--muted);letter-spacing:0}
+  .board .v.mine{color:var(--blue-700)}
+
+  .turn{
+    display:flex;align-items:center;gap:16px;padding:20px 22px;border-radius:var(--r);
+    background:var(--lilac);border:1px solid var(--lilac-600);color:var(--on-deep);
+  }
+  .turn.call{background:var(--rose-600);border-color:var(--rose-700);color:var(--cream)}
+  .turn .big{font-size:1.9rem;font-weight:600;letter-spacing:-.03em;line-height:1}
+  .turn .lb{font-size:.64rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--on-deep-2)}
+  .turn .tx b{display:block;font-size:.92rem;font-weight:600;color:inherit}
+  .turn .tx span{font-size:.79rem;color:var(--on-deep-3)}
+  .turn.call .lb{color:var(--cream-2)}
+  .turn.call .tx span{color:var(--cream-3)}
+
+  .bar-track{height:7px;border-radius:4px;background:var(--surface-3);border:1px solid var(--line-2);overflow:hidden}
+  .bar-track i{display:block;height:100%;background:var(--blue-600);transition:width .6s ease}
+  .bar-meta{display:flex;justify-content:space-between;gap:12px;margin-top:9px;font-size:.74rem;color:var(--muted);font-variant-numeric:tabular-nums}
+  .bar-meta b{color:var(--txt);font-weight:500}
+
+  .tl{list-style:none;display:flex;flex-direction:column}
+  .tl li{display:flex;align-items:center;gap:12px;padding:13px 22px;border-bottom:1px solid var(--line);font-size:.83rem}
+  .tl li:last-child{border-bottom:0}
+  .tl .n{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--surface-3);border:1px solid var(--line-2);color:var(--muted);font-size:.66rem}
+  .tl .n svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+  .tl .t{color:var(--muted)}
+  .tl .when{margin-left:auto;font-size:.72rem;color:var(--faint);font-variant-numeric:tabular-nums}
+  .tl li.done .n{background:var(--lilac);border-color:var(--lilac-600);color:var(--on-deep)}
+  .tl li.done .t{color:var(--txt-2)}
+  .tl li.now{background:var(--blue-wash)}
+  .tl li.now .n{background:var(--blue);border-color:var(--blue-600);color:var(--on-accent)}
+  .tl li.now .t{color:var(--txt);font-weight:500}
+
+  /* ---------- TABLES ---------- */
+  .table-wrap{overflow:auto}
+  .tbl{width:100%;border-collapse:collapse;font-size:.82rem}
+  .tbl th{
+    text-align:left;height:34px;padding:0 18px;white-space:nowrap;background:var(--cream);
+    border-bottom:1px solid var(--line-2);font-size:.635rem;font-weight:600;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--muted);
+  }
+  .tbl td{padding:13px 18px;border-bottom:1px solid var(--line);vertical-align:middle;white-space:nowrap}
+  .tbl tbody tr:last-child td{border-bottom:0}
+  .tbl tbody tr:hover td{background:var(--hover)}
+  .tbl .r{text-align:right}
+  .tbl .tok{font-family:'JetBrains Mono',monospace;font-size:.79rem;letter-spacing:-.02em}
+  .tbl .strong{font-weight:500}
+  .tbl .sub{color:var(--muted);font-size:.76rem}
+  .tbl .empty{padding:34px 18px;text-align:center;color:var(--muted);white-space:normal}
+  .tbl .empty b{display:block;color:var(--txt-2);font-weight:500;margin-bottom:4px}
+
+  /* ---------- APPOINTMENTS ---------- */
+  .apt{
+    display:flex;align-items:center;gap:18px;padding:18px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap;
+  }
+  .apt:last-child{border-bottom:0}
+  .apt .when{
+    width:60px;flex:none;text-align:center;padding:9px 6px;border-radius:var(--r-sm);
+    background:var(--lilac-wash);border:1px solid var(--lilac-600);
+  }
+  .apt .when b{display:block;font-size:1.16rem;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+  .apt .when span{display:block;font-size:.64rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+  .apt .info{flex:1;min-width:190px}
+  .apt .info b{display:block;font-size:.88rem;font-weight:500}
+  .apt .info span{display:block;font-size:.77rem;color:var(--muted);margin-top:2px}
+  .apt .acts{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .apt.cancelled{opacity:.62}
+  .apt.cancelled .info b{text-decoration:line-through}
+  .apt .confirm{
+    display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r-sm);
+    background:var(--rose-wash);border:1px solid var(--rose-bd);
+    font-size:.78rem;color:var(--rose-700);font-weight:500;
+  }
+
+  /* ---------- TOASTS ---------- */
+  .toasts{position:fixed;right:20px;bottom:20px;z-index:200;display:flex;flex-direction:column;gap:10px;width:320px}
+  .toast{
+    display:flex;align-items:flex-start;gap:11px;padding:13px 14px;
+    background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-sm);box-shadow:var(--shadow);
+    animation:tin .28s ease;
+  }
+  .toast.out{animation:tout .25s ease forwards}
+  @keyframes tin{from{opacity:0;transform:translateY(8px)}}
+  @keyframes tout{to{opacity:0;transform:translateX(14px)}}
+  .toast .bar{width:3px;align-self:stretch;border-radius:2px;background:var(--blue-600);flex:none}
+  .toast[data-kind="ok"] .bar{background:var(--lilac-600)}
+  .toast[data-kind="warn"] .bar{background:var(--rose-600)}
+  .toast[data-kind="danger"] .bar{background:var(--rose-700)}
+  .toast b{display:block;font-size:.81rem;font-weight:500}
+  .toast span{display:block;font-size:.75rem;color:var(--muted);margin-top:2px}
+
+  /* ---------- FOOT ---------- */
+  .foot{border-top:1px solid var(--line-2);background:var(--cream)}
+  .foot-in{max-width:var(--maxw);margin:0 auto;padding:26px 28px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;font-size:.78rem;color:var(--muted)}
+  .foot-links{display:flex;gap:18px;flex-wrap:wrap;margin-left:auto}
+  .foot a{color:var(--txt-2)}
+  .foot a:hover{color:var(--txt)}
+
+  /* ---------- SCREENS (login + sector chooser) ---------- */
+  .scr{position:fixed;inset:0;z-index:400;display:grid;place-items:center;overflow:auto;
+    padding:calc(30px + env(safe-area-inset-top)) 20px calc(30px + env(safe-area-inset-bottom))}
+  .scr[hidden]{display:none}
+  .scr::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(58% 52% at 10% 6%,var(--blue-wash),transparent 68%),
+      radial-gradient(52% 48% at 90% 8%,var(--lilac-wash),transparent 68%),
+      radial-gradient(60% 58% at 82% 96%,var(--rose-wash),transparent 68%),
+      radial-gradient(50% 46% at 4% 92%,var(--cream),transparent 70%),
+      var(--bg);
+  }
+  .scr-in{position:relative;z-index:1;width:100%;max-width:420px}
+  .scr-in.gate-in{max-width:840px}
+  .scr-head{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;margin-bottom:22px}
+  .scr-head h1{font-size:1.28rem;font-weight:600;letter-spacing:-.02em;line-height:1.25}
+  .scr-head h1:focus{outline:none}
+  .scr-head p{font-size:.85rem;color:var(--txt-2);max-width:44ch}
+  .scr-head .mark-lg{
+    width:46px;height:46px;border-radius:11px;display:grid;place-items:center;flex:none;
+    background:var(--rose-600);color:var(--cream);font-weight:700;font-size:1.05rem;border:1px solid var(--rose-700);
+  }
+  .scr-head .wordmark{font-size:.92rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--txt-2)}
+  .scr-card{box-shadow:var(--shadow)}
+  .scr-card>.panel-pad{display:flex;flex-direction:column;gap:18px}
+  .scr-foot{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:18px;text-align:center;font-size:.75rem;color:var(--muted)}
+  .scr-foot .lock{display:flex;align-items:center;gap:6px;justify-content:center}
+  .scr-foot .lock svg{width:13px;height:13px;fill:none;stroke:var(--blue-700);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .scr-foot a{color:var(--txt-2);text-underline-offset:2px}
+  .scr-foot a:hover{color:var(--txt)}
+  .langs{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+
+  .id-row{
+    display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--r-sm);
+    background:var(--surface-2);border:1px solid var(--line-2);
+  }
+  .id-row .ic{width:32px;height:32px;border-radius:var(--r-xs);display:grid;place-items:center;flex:none;background:var(--cream);color:var(--rose-700);border:1px solid var(--line-2)}
+  .id-row .ic svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .id-row b{display:block;font-size:.85rem;font-weight:600;line-height:1.25}
+  .id-row .n{display:block;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:.76rem;color:var(--muted);letter-spacing:-.01em;margin-top:2px}
+
+  /* sector chooser */
+  .gate-user{display:flex;align-items:center;gap:11px;padding:12px 14px;border-radius:var(--r-sm);background:var(--surface);border:1px solid var(--line-2);box-shadow:var(--shadow)}
+  .gate-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:18px}
+  .pick{
+    position:relative;display:flex;flex-direction:column;gap:13px;padding:20px 20px 18px;text-align:left;overflow:hidden;
+    background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r);
+    box-shadow:var(--shadow);cursor:pointer;font:inherit;
+    transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;
+  }
+  .pick-img{
+    display:block;position:relative;margin:-20px -20px 0;aspect-ratio:16/7;overflow:hidden;
+    background:var(--surface);border-bottom:1px solid var(--line-2);
+  }
+  .pick-img img{width:100%;height:100%;object-fit:contain;object-position:center;display:block;transition:transform .3s ease}
+  .pick:hover .pick-img img{transform:scale(1.035)}
+  .pick-img::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(255,255,255,.6),rgba(255,255,255,0) 44%);pointer-events:none}
+  .pick-img--art{background:linear-gradient(140deg,var(--blue-wash),var(--lilac-wash) 60%,var(--cream))}
+  .pick-img--art img{object-fit:contain;padding:9px 14px;mix-blend-mode:multiply}
+  .pick-img--art::after{background:linear-gradient(to top,rgba(255,255,255,.28),rgba(255,255,255,0) 50%)}
+  .pick:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(96,66,60,.18);border-color:var(--blue-bd)}
+  .pick-head{display:flex;align-items:center;gap:11px}
+  .pick-ic{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;flex:none;background:var(--blue);border:1px solid var(--blue-600);color:var(--on-accent)}
+  .pick-ic svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .pick-head b{display:block;font-size:.94rem;font-weight:600;letter-spacing:-.01em;line-height:1.25}
+  .pick-head span{display:block;font-size:.72rem;color:var(--muted);margin-top:1px}
+  .pick .pick-txt{display:block;font-size:.79rem;color:var(--txt-2)}
+  .pick-chips{display:flex;flex-wrap:wrap;gap:6px}
+  .sw{display:flex;gap:5px}
+  .sw i{width:26px;height:9px;border-radius:3px;display:block;border:1px solid rgba(74,50,44,.14)}
+  .sw i:nth-child(1){background:var(--blue)}
+  .sw i:nth-child(2){background:var(--lilac)}
+  .sw i:nth-child(3){background:var(--rose)}
+  .sw i:nth-child(4){background:var(--cream)}
+  .pick-go{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:4px;font-size:.8rem;font-weight:600;color:var(--blue-700);transition:gap .2s ease}
+  .pick:hover .pick-go{gap:10px}
+  .pick-go svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  #switchBtn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width:1000px){
+    .c-2,.c-1-2{grid-template-columns:minmax(0,1fr)}
+    .rec{grid-template-columns:repeat(2,minmax(0,1fr))}
+    /* bar is getting tight — the SOS control keeps its colour, drops its word */
+    .sos-btn{width:34px;padding:0;justify-content:center;border-radius:50%}
+    .sos-btn .lb,.sos-btn .d{display:none}
+  }
+  /* tablets / narrow laptops */
+  @media (max-width:860px){
+    .panel-pad{padding:20px 20px 22px}
+    .panel-head{padding:14px 18px}
+  }
+
+  /* ---------- PHONES ---------- */
+  @media (max-width:720px){
+    .bar-in,.tabs-in,main,.foot-in{padding-left:16px;padding-right:16px}
+    main{padding-top:20px;padding-bottom:56px}
+    .bar-in{gap:10px}
+    .facility,.who b,.who span{display:none}
+
+    /* tab strip: bigger targets, scrolls sideways, no fiddly scrollbar */
+    .tab{height:50px;padding:0 13px}
+    .tabs-in{scrollbar-width:none;-ms-overflow-style:none}
+    .tabs-in::-webkit-scrollbar{display:none}
+
+    /* touch targets — and 16px inputs so iOS does not zoom on focus */
+    .icon-btn{width:40px;height:40px}
+    .sos-btn{height:40px;padding:0 15px}
+    .btn{height:42px}
+    .btn.btn-lg{height:46px}
+    .btn.btn-sm{height:36px;padding:0 12px}
+    .seg button{height:44px;padding:0 14px}
+    .chan{flex:1 1 150px;padding:12px 13px}
+    .input,select.input,textarea.input{font-size:16px}
+
+    /* denser panels — less scrolling to see anything */
+    .panel-pad{padding:18px 16px 20px}
+    .panel-head{padding:13px 16px}
+    .sum,.rec{grid-template-columns:1fr 1fr}
+    .grid-2{grid-template-columns:1fr}
+    .sum div{padding:12px 13px}
+    .sum .v{font-size:1.05rem}
+    .board{grid-template-columns:1fr}
+    .board>div{border-right:0;border-bottom:1px solid var(--line);padding:14px 16px}
+    .board>div:last-child{border-bottom:0}
+    .board .v{font-size:1.3rem}
+    .turn{flex-wrap:wrap;gap:12px;padding:16px}
+    .turn .big{font-size:1.6rem}
+    .tl li{padding:12px 16px;gap:10px}
+
+    .apt{padding:14px 16px;gap:14px}
+    .apt .info{min-width:0}
+    .apt .acts{width:100%}
+    .apt .acts .btn{flex:1 1 auto;height:40px}
+
+    /* tables: long names wrap instead of forcing a sideways scroll */
+    .tbl th{padding:0 13px}
+    .tbl td{padding:12px 13px}
+    .tbl td.strong{white-space:normal}
+    .table-wrap{-webkit-overflow-scrolling:touch}
+
+    .toasts{left:12px;right:12px;width:auto;bottom:calc(14px + env(safe-area-inset-bottom))}
+    .sos-modal{padding:14px 12px calc(14px + env(safe-area-inset-bottom))}
+    .sos-body{padding:15px}
+    .sos-foot{padding:0 15px 15px}
+    .sos-head{padding:13px 15px}
+    .scr{padding:calc(22px + env(safe-area-inset-top)) 16px calc(22px + env(safe-area-inset-bottom))}
+    .scr-head h1{font-size:1.16rem}
+    .scr-head p{font-size:.82rem}
+    .gate-grid{grid-template-columns:1fr}
+    .pick{padding:16px 16px 14px}
+    .pick-img{margin:-16px -16px 0}
+    .foot-in{gap:10px;padding-top:14px;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+    .foot-links{margin-left:0;gap:4px 16px;width:100%}
+    .foot a{display:inline-flex;align-items:center;min-height:44px;padding:0 2px}
+
+    /* SOS label is the first thing to go when the bar runs out of room */
+    .sos-btn{width:40px;height:40px;padding:0;justify-content:center;border-radius:50%}
+    .sos-btn .lb,.sos-btn .d{display:none}
+    .sos-grid{grid-template-columns:1fr}
+  }
+
+  /* small phones */
+  @media (max-width:420px){
+    .bar-in,.tabs-in,main,.foot-in{padding-left:14px;padding-right:14px}
+    .mark{width:28px;height:28px;font-size:.8rem}
+    .brand b{font-size:.84rem}
+    .brand span{font-size:.63rem;max-width:104px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    /* the avatar is the only thing left of the identity chip here, and the
+       SOS control outranks it — the wordmark keeps the space instead */
+    .who{display:none}
+    .view-head h1{font-size:1.18rem}
+    .sum,.rec,.grid-2{grid-template-columns:1fr}
+    .sum div,.rec div{padding:11px 13px}
+    .sum .v{font-size:1rem}
+    .board .v{font-size:1.2rem}
+    .tab{padding:0 11px;font-size:.8rem}
+    .panel-pad{padding:16px 14px 18px}
+  }
+  /* very narrow phones: the "AI" tile only repeats the wordmark, so drop it
+     and let AI-ORCHESTRA stay readable instead of collapsing to an ellipsis */
+  @media (max-width:370px){
+    .mark{display:none}
+    .brand b{font-size:.8rem}
+  }
+  /* ---------- PHONE CHROME: bottom tab bar + live token bar ---------- */
+  @media (max-width:720px), (max-height:500px) and (pointer:coarse){
+    /* compact top bar — more room for content */
+    .bar-in{height:52px;gap:9px}
+
+    /* tabs become a fixed bottom bar, thumb-reachable */
+    .tabs{
+      position:fixed;top:auto;bottom:0;left:0;right:0;z-index:60;
+      background:var(--surface);border-top:1px solid var(--line-2);border-bottom:0;
+      padding-bottom:env(safe-area-inset-bottom);
+      box-shadow:0 -8px 22px rgba(96,66,60,.12);
+    }
+    .tabs-in{max-width:none;margin:0;padding:0 4px;gap:0;overflow-x:visible;justify-content:space-between}
+    .tab{
+      position:relative;flex:1 1 0;min-width:0;height:auto;padding:8px 2px 9px;gap:3px;
+      flex-direction:column;justify-content:center;align-items:center;
+      font-size:.63rem;line-height:1.15;text-align:center;border-bottom:0;
+    }
+    .tab .cnt{
+      position:absolute;top:4px;left:calc(50% + 5px);height:15px;padding:0 4px;font-size:.57rem;
+      background:var(--rose-600);border-color:var(--rose-700);color:var(--cream);
+    }
+    .tab[aria-selected="true"]{border-bottom:0;color:var(--blue-700);font-weight:600;background:var(--blue-wash)}
+    .tab[aria-selected="true"]::after{
+      content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);
+      width:38px;height:3px;border-radius:0 0 3px 3px;background:var(--blue-600);
+    }
+
+    /* keep everything clear of the fixed bar */
+    main{padding-top:18px;padding-bottom:34px}
+    #main{scroll-margin-top:calc(66px + env(safe-area-inset-top))}
+    .foot-in{padding-bottom:calc(66px + env(safe-area-inset-bottom))}
+    .toasts{bottom:calc(122px + env(safe-area-inset-bottom))}
+
+    /* live token bar */
+    .floater:not([hidden]){display:flex}
+    .floater{
+      position:fixed;left:10px;right:10px;bottom:calc(60px + env(safe-area-inset-bottom));
+      z-index:70;align-items:center;gap:12px;width:auto;margin:0;font:inherit;text-align:left;
+      padding:10px 12px;border-radius:14px;cursor:pointer;
+      background:var(--lilac);border:1px solid var(--lilac-600);color:var(--on-deep);
+      box-shadow:0 12px 26px rgba(96,66,60,.26);transition:transform .15s ease;
+    }
+    .floater:active{transform:scale(.985)}
+    .floater.call{background:var(--rose-600);border-color:var(--rose-700);color:var(--cream)}
+    .fl-tok{flex:none;font-size:1.05rem;font-weight:600;letter-spacing:-.02em}
+    .fl-tx{flex:1;min-width:0}
+    .fl-tx b{display:block;font-size:.8rem;font-weight:600;line-height:1.25}
+    .fl-tx span{display:block;font-size:.7rem;opacity:.82;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .fl-go{flex:none;display:flex;align-items:center;gap:4px;font-size:.72rem;font-weight:600}
+    .fl-go svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  }
+
+  /* touch devices get comfortable targets at any width or orientation */
+  @media (pointer:coarse){
+    .icon-btn{min-width:40px;min-height:40px}
+    .sos-btn{min-width:40px;min-height:40px}
+    .sos-x{min-width:40px;min-height:40px;width:40px;height:40px}
+    .btn{min-height:40px}
+    .btn.btn-sm{min-height:36px}
+    .seg button{min-height:44px}
+    .chan{min-height:44px}
+    .foot a{display:inline-flex;align-items:center;min-height:44px;padding:0 2px}
+    .input,select.input,textarea.input{font-size:16px} /* stops iOS zooming on focus */
+  }
+
+  @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+</style>
+</head>
+<body>
+
+<!-- ===== ICONS ===== -->
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-ticket" viewBox="0 0 24 24"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8Z"/><path d="M13 6v12" stroke-dasharray="2 3"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></symbol>
+  <symbol id="i-qr" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM19 19h2v2h-2z"/></symbol>
+  <symbol id="i-id" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.7-1.6 1.8-2.4 3-2.4s2.3.8 3 2.4M15 10h4M15 13h3"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 15V10a6 6 0 1 0-12 0v5l-1.5 2.5h15L18 15Z"/><path d="M10 20a2 2 0 0 0 4 0"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4 2.6 20h18.8L12 4Z"/><path d="M12 10v4M12 17h.01"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M4 5c0-1 1-2 2-2h2l2 5-2 1a12 12 0 0 0 5 5l1-2 5 2v2c0 1-1 2-2 2A15 15 0 0 1 4 5Z"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.6 6.8-4.2M8.6 13.4l6.8 4.2"/></symbol>
+  <symbol id="i-head" viewBox="0 0 24 24"><path d="M4 13a8 8 0 0 1 16 0v3a3 3 0 0 1-3 3h-2"/><rect x="2" y="12" width="4" height="7" rx="2"/><rect x="18" y="12" width="4" height="7" rx="2"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M8 11l4 4 4-4M4 19h16"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M16 5.5a3 3 0 0 1 0 5.6M18 20c0-2.2-.6-3.9-1.7-5"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="2.5"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10"/></symbol>
+  <symbol id="i-swap" viewBox="0 0 24 24"><path d="M4 8h13M14 5l3 3-3 3M20 16H7M10 13l-3 3 3 3"/></symbol>
+  <symbol id="i-hosp" viewBox="0 0 24 24"><path d="M4 21V7l8-4 8 4v14"/><path d="M10 4.2V3h4v1.6"/><path d="M12 10v6M9 13h6"/><path d="M2.5 21h19"/></symbol>
+  <symbol id="i-gov" viewBox="0 0 24 24"><path d="M3 9.5 12 4l9 5.5"/><path d="M4.5 9.5h15M4.5 9.5V20M9.5 9.5V20M14.5 9.5V20M19.5 9.5V20"/><path d="M2.5 20h19"/></symbol>
+  <symbol id="i-sos" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="13.5" rx="2.5"/><path d="M12 6V3M7.2 3h9.6"/><path d="M12 9.6v6.3M8.85 12.75h6.3"/></symbol>
+</svg>
+
+<!-- ===== LOGIN ===== -->
+<section class="scr" id="scrLogin" aria-labelledby="loginH1">
+  <div class="scr-in">
+    <div class="scr-head">
+      <span class="mark-lg" aria-hidden="true">AI</span>
+      <span class="wordmark">AI-ORCHESTRA</span>
+      <h1 id="loginH1" tabindex="-1">Sign in to AI-ORCHESTRA</h1>
+      <p>One account for hospital visits and government services. Verify your Aadhaar or <abbr title="Ayushman Bharat Health Account">ABHA</abbr> health ID to continue.</p>
+    </div>
+
+    <section class="panel scr-card">
+      <div class="panel-pad">
+        <div class="field">
+          <label id="idTypeLbl">Sign in with</label>
+          <div class="seg" id="idSeg" role="group" aria-labelledby="idTypeLbl">
+            <button type="button" aria-pressed="true" data-id="abha">ABHA Health ID</button>
+            <button type="button" aria-pressed="false" data-id="aadhaar">Aadhaar</button>
+          </div>
+        </div>
+
+        <div class="id-row">
+          <span class="ic"><svg aria-hidden="true"><use href="#i-id"/></svg></span>
+          <span>
+            <b id="loginName">Ananya Sharma</b>
+            <span class="n" id="loginIdLine">ABHA Health ID ···· 9931</span>
+          </span>
+          <span class="pill pill-xs pill-soft" id="loginIdPill" style="margin-left:auto">ABHA</span>
+        </div>
+
+        <button class="btn btn-primary btn-lg" id="signInBtn">
+          <svg aria-hidden="true"><use href="#i-arrow"/></svg>Continue as Ananya Sharma
+        </button>
+      </div>
+    </section>
+
+    <div class="scr-foot">
+      <span class="lock"><svg aria-hidden="true"><use href="#i-lock"/></svg>Encrypted · UIDAI &amp; ABDM sandbox · no real data is sent</span>
+      <span class="langs">
+        <span class="tag">English</span><span class="tag">हिन्दी</span><span class="tag">ಕನ್ನಡ</span>
+      </span>
+      <span>Help 1800-000-111 · For medical emergencies dial 108</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SECTOR CHOOSER ===== -->
+<section class="scr" id="scrGate" aria-labelledby="gateH1" hidden>
+  <div class="scr-in gate-in">
+    <div class="scr-head">
+      <span class="mark-lg" aria-hidden="true">AI</span>
+      <span class="wordmark">AI-ORCHESTRA</span>
+      <h1 id="gateH1" tabindex="-1">Which service are you visiting today?</h1>
+      <p>Pick a sector to open the right dashboard. You can switch any time from the top bar.</p>
+    </div>
+
+    <div class="gate-user">
+      <span class="av" aria-hidden="true" style="width:34px;height:34px;font-size:.8rem;background:var(--lilac);border:1px solid var(--lilac-600);color:var(--on-deep);border-radius:50%;display:grid;place-items:center">AS</span>
+      <span>
+        <b id="gateName">Ananya Sharma</b>
+        <span class="n" id="gateId">Signed in with ABHA ···· 9931</span>
+      </span>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:12px">
+        <span class="pill pill-xs pill-soft" id="gateIdPill">
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px"><path d="M20 6L9 17l-5-5"/></svg>
+          ABHA
+        </span>
+        <button class="btn btn-sm btn-quiet" id="signOutBtn" type="button" style="padding:0 8px;height:24px;font-size:.7rem">Sign out</button>
+      </div>
+    </div>
+
+    <div class="gate-grid">
+      <button class="pick theme-hospital" type="button" data-sector="hospital">
+        <span class="pick-img pick-img--art"><img src="hospital-building-illustration-medical-clinic-isolated-on-white-background-vector.jpg" alt="" width="1600" height="700" loading="lazy" decoding="async"></span>
+        <span class="pick-head">
+          <span class="pick-ic"><svg aria-hidden="true"><use href="#i-hosp"/></svg></span>
+          <span>
+            <b>Hospital</b>
+            <span>Sunrise General Hospital</span>
+          </span>
+        </span>
+        <span class="pick-txt">OPD check-in, live queue, appointments and lab reports pulled live from your health ID.</span>
+        <span class="pick-chips">
+          <span class="tag">Cardiology</span><span class="tag">General Medicine</span><span class="tag">Radiology</span>
+        </span>
+        <span class="pick-go">Open hospital dashboard<svg aria-hidden="true"><use href="#i-arrow"/></svg></span>
+      </button>
+
+      <button class="pick theme-government" type="button" data-sector="government">
+        <span class="pick-img"><img src="government office.jpg" alt="" width="1600" height="700" loading="lazy" decoding="async"></span>
+        <span class="pick-head">
+          <span class="pick-ic"><svg aria-hidden="true"><use href="#i-gov"/></svg></span>
+          <span>
+            <b>Government</b>
+            <span>District e-Gov Kendra</span>
+          </span>
+        </span>
+        <span class="pick-txt">Aadhaar, Passport, RTO, Municipal and Post services, plus the Government Medical College OPD.</span>
+        <span class="pick-chips">
+          <span class="tag">Aadhaar</span><span class="tag">Passport</span><span class="tag">RTO</span><span class="tag">Civic</span><span class="tag">Post</span>
+        </span>
+        <span class="pick-go">Open government services<svg aria-hidden="true"><use href="#i-arrow"/></svg></span>
+      </button>
+    </div>
+
+    <div class="scr-foot">
+      <!-- Sign out moved to header -->
+    </div>
+  </div>
+</section>
+
+<div id="scrApp" hidden>
+<a class="skip" href="#main">Skip to main content</a>
+<!-- ===== TOP BAR ===== -->
+<header class="bar">
+  <div class="bar-in">
+    <span class="mark" aria-hidden="true">AI</span>
+    <span class="brand">
+      <b>AI-ORCHESTRA</b>
+      <span id="brandSub">Sunrise General Hospital</span>
+    </span>
+    <div class="bar-right">
+      <span class="facility">
+        <span class="pill pill-xs pill-blue" aria-hidden="true"><span class="d"></span></span>
+        <span id="facilityTxt">OPD open · till 8:00 PM</span>
+      </span>
+      <button class="sos-btn" id="sosBtn" type="button" aria-haspopup="dialog" aria-label="Health emergency — get help now">
+        <span class="d" aria-hidden="true"></span>
+        <svg aria-hidden="true"><use href="#i-sos"/></svg>
+        <span class="lb">Emergency</span>
+      </button>
+      <button class="icon-btn" id="backBtn" type="button" aria-label="Go back" title="Go back"><svg aria-hidden="true" style="transform:rotate(180deg)"><use href="#i-arrow"/></svg></button>
+      <button class="icon-btn" id="switchBtn" type="button" aria-label="Switch sector" title="Switch sector"><svg aria-hidden="true"><use href="#i-swap"/></svg></button>
+      <button class="icon-btn" id="helpBtn" type="button" aria-label="Get help" title="Get help"><svg aria-hidden="true"><use href="#i-head"/></svg></button>
+      <div class="who">
+        <span class="av" aria-hidden="true">AS</span>
+        <span>
+          <b>Ananya Sharma</b>
+          <span id="whoId">ABHA linked</span>
+        </span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== TABS ===== -->
+<nav class="tabs" aria-label="My visit">
+  <div class="tabs-in" id="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-checkin" aria-controls="v-checkin" aria-selected="true" data-tab="checkin">
+      <svg aria-hidden="true"><use href="#i-ticket"/></svg>Check in
+    </button>
+    <button class="tab" role="tab" id="tab-queue" aria-controls="v-queue" aria-selected="false" data-tab="queue">
+      <svg aria-hidden="true"><use href="#i-list"/></svg>My queue <span class="cnt num" id="queueCount">0</span>
+    </button>
+    <button class="tab" role="tab" id="tab-apts" aria-controls="v-apts" aria-selected="false" data-tab="apts">
+      <svg aria-hidden="true"><use href="#i-cal"/></svg>Appointments <span class="cnt num" id="aptCount">0</span>
+    </button>
+    <button class="tab" role="tab" id="tab-reports" aria-controls="v-reports" aria-selected="false" data-tab="reports">
+      <svg aria-hidden="true"><use href="#i-doc"/></svg><span id="tabReportsLbl">Reports</span> <span class="cnt num" id="reportCount">0</span>
+    </button>
+  </div>
+</nav>
+
+<main id="main">
+  <div style="margin-bottom:20px">
+    <button class="btn-back-big" id="mainBackBtn">
+      <svg aria-hidden="true" style="transform:rotate(180deg)"><use href="#i-arrow"/></svg>
+      Back to Sector Chooser
+    </button>
+  </div>
+  <!-- ============================================================
+       CHECK IN
+       ============================================================ -->
+  <section class="view is-active" id="v-checkin" role="tabpanel" aria-labelledby="tab-checkin" tabindex="-1">
+    <div class="view-head">
+      <h1 id="checkinH1">Check in for your OPD visit</h1>
+      <p id="checkinP">Verify your <abbr title="Ayushman Bharat Health Account">ABHA</abbr> health ID, choose a department, and we will issue a live token with an honest wait estimate.</p>
+    </div>
+
+    <div class="cols c-2">
+      <!-- form -->
+      <section class="panel panel-pad">
+        <div class="panel-head">
+          <span class="panel-title"><svg><use href="#i-ticket"/></svg><span id="visitPanelLbl">Visit details</span></span>
+          <span class="panel-note">Takes about 20 seconds</span>
+        </div>
+
+        <div class="field">
+          <label id="checkIdLbl">Health ID</label>
+          <div id="checkIdBox"></div>
+        </div>
+
+        <div class="field">
+          <label for="dept" id="deptLbl">Department</label>
+          <select class="input" id="dept"></select>
+          <p class="hint" id="deptHint">Your token is issued against the department queue, so the wait estimate updates with the live queue.</p>
+        </div>
+
+        <div class="field">
+          <label id="visitLbl">Visit type</label>
+          <div class="seg" role="group" aria-labelledby="visitLbl" id="visitSeg"></div>
+        </div>
+
+        <div class="field">
+          <label for="reason" id="reasonLbl">Reason for visit <span style="margin-left:auto;text-transform:none;letter-spacing:0;font-weight:400">optional</span></label>
+          <textarea class="input" id="reason" rows="2" autocapitalize="sentences" autocomplete="off" spellcheck="true"></textarea>
+          <p class="hint" id="reasonHint">Helps the triage model prioritise you fairly. Never share emergency symptoms here — walk straight to the emergency desk.</p>
+        </div>
+
+        <div class="field">
+          <label id="chanLbl">How should we alert you?</label>
+          <div class="chans" role="group" aria-labelledby="chanLbl" id="chanBox">
+            <label class="chan"><input type="checkbox" value="SMS" checked /><span class="box"><svg aria-hidden="true"><use href="#i-check"/></svg></span><span><b>SMS</b><span>3 slots before</span></span></label>
+            <label class="chan"><input type="checkbox" value="Push" checked /><span class="box"><svg aria-hidden="true"><use href="#i-check"/></svg></span><span><b>Push</b><span>App notification</span></span></label>
+            <label class="chan"><input type="checkbox" value="WhatsApp" /><span class="box"><svg aria-hidden="true"><use href="#i-check"/></svg></span><span><b>WhatsApp</b><span>Voice + text</span></span></label>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-lg" id="checkinBtn" style="margin-top:22px">
+          <svg aria-hidden="true"><use href="#i-qr"/></svg><span id="checkinBtnLbl">Verify ID &amp; get my token</span>
+        </button>
+      </section>
+
+      <!-- live preview -->
+      <div class="stack">
+        <section class="panel panel-pad">
+          <div class="panel-head">
+            <span class="panel-title"><svg><use href="#i-clock"/></svg>Live estimate</span>
+            <span class="pill pill-xs pill-soft" id="deptPill">General Medicine</span>
+          </div>
+          <div class="sum">
+            <div>
+              <div class="k">Now serving</div>
+              <div class="v mono" id="pvServing">A-204</div>
+              <div class="m">Counter <span class="num" id="pvCounter">3</span></div>
+            </div>
+            <div>
+              <div class="k">People ahead of you</div>
+              <div class="v num" id="pvAhead">6</div>
+              <div class="m">Live count</div>
+            </div>
+            <div>
+              <div class="k">Estimated wait</div>
+              <div class="v num" id="pvWait">~24 <small>min</small></div>
+              <div class="m">At <span class="num" id="pvPer">6</span> min / visitor</div>
+            </div>
+            <div>
+              <div class="k">Counters open</div>
+              <div class="v num" id="pvOpen">4</div>
+              <div class="m" id="pvOpenM">of 6 in this dept</div>
+            </div>
+          </div>
+          <p class="hint" id="estHint" style="margin-top:14px">
+            Estimates refresh every few seconds and include your visit type. Emergency and senior-citizen cases are prioritised automatically.
+          </p>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <span class="panel-title"><svg><use href="#i-users"/></svg>Next in line</span>
+            <span class="panel-note">Live</span>
+          </div>
+          <div class="table-wrap">
+            <table class="tbl">
+              <caption class="sr">Next tokens in the selected queue</caption>
+              <thead>
+                <tr><th style="width:104px">Token</th><th id="pvColType">Type</th><th class="r" style="width:88px">Est. wait</th></tr>
+              </thead>
+              <tbody id="pvList"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       MY QUEUE
+       ============================================================ -->
+  <section class="view" id="v-queue" role="tabpanel" aria-labelledby="tab-queue" tabindex="-1" hidden>
+    <div class="view-head">
+      <h1 id="queueH1">Your live queue</h1>
+      <p id="queueP">Updated automatically as the counter moves. Keep this page open, or enable alerts and walk away.</p>
+    </div>
+
+    <div id="queueBody"></div>
+  </section>
+
+  <!-- ============================================================
+       APPOINTMENTS
+       ============================================================ -->
+  <section class="view" id="v-apts" role="tabpanel" aria-labelledby="tab-apts" tabindex="-1" hidden>
+    <div class="view-head">
+      <h1 id="aptH1">Appointments</h1>
+      <p id="aptP">Upcoming visits and recent ones. You can reschedule or cancel up to 2 hours before the slot.</p>
+    </div>
+    <div class="cols c-1-2">
+      <section class="panel panel-pad">
+        <div class="panel-head">
+          <span class="panel-title"><svg><use href="#i-plus"/></svg><span id="bookPanelLbl">Book a new appointment</span></span>
+        </div>
+        <div class="field">
+          <label for="bDept" id="bDeptLbl">Department</label>
+          <select class="input" id="bDept"></select>
+        </div>
+        <div class="field">
+          <label for="bDate">Preferred date</label>
+          <input class="input" id="bDate" type="date" />
+        </div>
+        <div class="field">
+          <label for="bSlot">Available slots</label>
+          <select class="input" id="bSlot"></select>
+          <p class="hint">Slots are released 24 hours in advance and held for 15 minutes.</p>
+        </div>
+        <button class="btn btn-primary btn-lg" id="bookBtn"><svg aria-hidden="true"><use href="#i-cal"/></svg><span id="bookBtnLbl">Book appointment</span></button>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <span class="panel-title"><svg><use href="#i-cal"/></svg>Your appointments</span>
+          <span class="panel-note" id="aptSummary"></span>
+        </div>
+        <div id="aptList"></div>
+      </section>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       REPORTS
+       ============================================================ -->
+  <section class="view" id="v-reports" role="tabpanel" aria-labelledby="tab-reports" tabindex="-1" hidden>
+    <div class="view-head">
+      <h1 id="repH1">Reports &amp; prescriptions</h1>
+      <p id="repP">Lab reports are released by the pathology department and stay available for 12 months.</p>
+    </div>
+
+    <div class="cols c-2">
+      <section class="panel">
+        <div class="panel-head">
+          <span class="panel-title"><svg><use href="#i-doc"/></svg><span id="repPanelLbl">Lab reports</span></span>
+          <button class="btn btn-sm btn-quiet" id="refreshReports" style="margin-left:auto"><svg><use href="#i-refresh"/></svg>Refresh</button>
+        </div>
+        <div class="table-wrap">
+          <table class="tbl">
+            <caption class="sr">Your lab reports and their status</caption>
+            <thead>
+              <tr>
+                <th id="repColT">Test</th>
+                <th style="width:150px" id="repColAt">Ordered</th>
+                <th style="width:118px">Status</th>
+                <th class="r" style="width:104px"></th>
+              </tr>
+            </thead>
+            <tbody id="reportList"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="stack">
+        <section class="panel panel-pad">
+          <div class="panel-head">
+            <span class="panel-title"><svg><use href="#i-pin"/></svg><span id="sumPanelLbl">Visit summary</span></span>
+          </div>
+          <div class="sum" style="grid-template-columns:1fr 1fr">
+            <div><div class="k">Visits this year</div><div class="v num" id="sumVisits">6</div><div class="m" id="sumVisitsM">Across 3 departments</div></div>
+            <div><div class="k" id="sumPendingK">Reports pending</div><div class="v num" id="sumPending">0</div><div class="m" id="sumPendingM">Pathology</div></div>
+          </div>
+          <p class="hint" id="sumHint" style="margin-top:14px">Your last consultation was with Dr. Meera Rao (Cardiology) on 12 Feb 2025. Records are fetched live from your ABHA health ID.</p>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <span class="panel-title"><svg><use href="#i-doc"/></svg><span id="itemsPanelLbl">Prescriptions</span></span>
+            <span class="panel-note" id="itemsNote">3 active</span>
+          </div>
+          <ul class="tl" id="itemsList"></ul>
+        </section>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <span id="footOrg">© 2025 Sunrise General Hospital · AI-ORCHESTRA</span>
+    <span class="pill pill-xs pill-dim">Demo data</span>
+    <nav class="foot-links" aria-label="Help and legal">
+      <a href="#main">Privacy</a>
+      <a href="#main">Accessibility</a>
+      <a href="#main">Contact help desk</a>
+    </nav>
+  </div>
+</footer>
+<!-- live token bar — fixed above the bottom tab strip on phones -->
+<button class="floater" id="floater" type="button" hidden>
+  <span class="fl-tok mono" id="flTok">A-121</span>
+  <span class="fl-tx"><b id="flPos">Position 5</b><span id="flSub">~20 min · Room 202</span></span>
+  <span class="fl-go"><span id="flGoLbl">View queue</span><svg aria-hidden="true"><use href="#i-arrow"/></svg></span>
+</button>
+</div><!-- /#scrApp -->
+
+<div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
+
+<!-- ===== EMERGENCY (SOS) ===== -->
+<div class="sos-modal" id="sosModal" hidden>
+  <div class="sos-card" role="dialog" aria-modal="true" aria-labelledby="sosTitle" id="sosCard">
+    <div class="sos-head">
+      <span class="ic" aria-hidden="true"><svg><use href="#i-sos"/></svg></span>
+      <b>
+        <span id="sosTitle">Health emergency</span>
+        <small>Tap a number to call right now</small>
+      </b>
+      <button class="sos-x" id="sosX" type="button" aria-label="Close emergency help">
+        <svg aria-hidden="true"><use href="#i-x"/></svg>
+      </button>
+    </div>
+    <div class="sos-body">
+      <p class="sos-lead" id="sosLead"></p>
+      <a class="sos-call" id="sosCallMain" href="tel:108">
+        <span class="ic" aria-hidden="true"><svg><use href="#i-phone"/></svg></span>
+        <span class="tx">
+          <b id="sosCallMainLbl">Call ambulance</b>
+          <span id="sosCallMainNote"></span>
+        </span>
+        <span class="num num" id="sosCallMainNum">108</span>
+      </a>
+      <div>
+        <div class="sos-sub">Other helplines</div>
+        <div class="sos-grid" id="sosGrid" style="margin-top:8px"></div>
+      </div>
+      <p class="sos-note">
+        <svg aria-hidden="true"><use href="#i-alert"/></svg>
+        <span id="sosNote"></span>
+      </p>
+    </div>
+    <div class="sos-foot">
+      <button class="btn" id="sosClose" type="button">Not an emergency — close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   HELPERS
+   ============================================================ */
+const $  = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const pad = n => String(n).padStart(2, '0');
+const nowTime = () => { const d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+
+const TABS = ['checkin','queue','apts','reports'];
+
+/* ============================================================
+   PERSON + IDENTITY TYPES
+   ============================================================ */
+const PATIENT = {
+  name:'Ananya Sharma', dob:'14 Mar 1992', sex:'Female', age:33,
+  phone:'+91 98765 41208', blood:'B+', allergy:'Penicillin (rash)',
+  address:'Bengaluru Urban, Karnataka', lang:'English, हिन्दी, ಕನ್ನಡ'
+};
+
+const IDS = {
+  abha:{
+    label:'ABHA Health ID', short:'ABHA', full:'Ayushman Bharat Health Account',
+    len:14, groups:[2,4,4,4], sep:'-', value:'14-2287-4610-9931',
+    mask:'XXXX-XXXX-XXXX-9931', tail:'9931',
+    hint:'14 digits. Printed on your ABHA card and in the ABDM app.',
+    gateway:'Verifying with the ABDM gateway…',
+    ok:'Demographics pulled from the ABDM sandbox in 0.8s.'
+  },
+  aadhaar:{
+    label:'Aadhaar', short:'Aadhaar', full:'Aadhaar (UIDAI)',
+    len:12, groups:[4,4,4], sep:' ', value:'4821 3388 1160',
+    mask:'XXXX XXXX 1160', tail:'1160',
+    hint:'12 digits, and the last 4 digits are masked after sign-in.',
+    gateway:'Verifying with the UIDAI / DigiLocker sandbox…',
+    ok:'Aadhaar record matched in the UIDAI sandbox in 1.1s.'
+  }
+};
+
+/* ============================================================
+   SECTOR CONFIG
+   Every user-facing string, queue and dataset lives here, so the
+   hospital and the government dashboard stay the same app.
+   ============================================================ */
+const SECTORS = {
+  hospital:{
+    key:'hospital',
+    facility:'Sunrise General Hospital',
+    brandSub:'Sunrise General Hospital',
+    org:'© 2025 Sunrise General Hospital · AI-ORCHESTRA',
+    title:'AI-ORCHESTRA — My Hospital Visit',
+    facilityPill:'OPD open · till 8:00 PM',
+    themeColor:'rgb(253,244,210)',
+    tabReports:'Reports',
+    switchTo:'Switch to government services',
+    helpToast:['Help desk','Call 1800-000-111 or use the kiosk at the main lobby. For emergencies, dial 108.'],
+    emergency:{
+      lead:'For chest pain, breathing trouble, heavy bleeding, fainting or a serious fall, call an ambulance instead of waiting in the OPD queue.',
+      main:{ lbl:'Call ambulance', num:'108', tel:'108', note:'Free 24x7 emergency ambulance, all India' },
+      alts:[
+        { lbl:'Any emergency', num:'112', tel:'112', note:'Police, fire, ambulance' },
+        { lbl:'Women & child helpline', num:'181', tel:'181', note:'24x7, free' }
+      ],
+      note:'Your ABHA number and live token are shared with the ambulance crew, so treatment starts the moment you arrive.'
+    },
+
+    deptWord:'in this dept',
+    defaultDept:'General Medicine',
+    deptList:['Cardiology','General Medicine','Orthopaedics','Paediatrics','Radiology'],
+    bookList:['Cardiology','General Medicine','Orthopaedics','Paediatrics'],
+
+    idTypes:['abha'],
+    idNote:'ABHA is required for hospital records',
+    idHint:'',
+    checkIdLbl:'Health ID',
+
+    visitLabel:'Visit type',
+    visitTypes:[{ v:'new', t:'New consultation' },{ v:'follow', t:'Follow-up' },{ v:'proc', t:'Procedure / day care' }],
+    colType:'Type',
+
+    checkinH1:'Check in for your OPD visit',
+    checkinP:'Verify your <abbr title="Ayushman Bharat Health Account">ABHA</abbr> health ID, choose a department, and we will issue a live token with an honest wait estimate.',
+    visitPanelLbl:'Visit details',
+    deptLbl:'Department',
+    deptHint:'Your token is issued against the department queue, so the wait estimate updates with the live queue.',
+    reasonHint:'Helps the triage model prioritise you fairly. Never share emergency symptoms here — walk straight to the emergency desk.',
+    reasonPh:'e.g. Chest tightness on exertion since 4 days',
+    checkinBtnLbl:'Verify ID & get my token',
+    tokenToastT:'Token {t} issued',
+    tokenToastB:'Position {p} · about {m} min. Alerts on {ch}.',
+    scanText:'Scan your ABHA QR code at the kiosk, or fetch the record with one tap.',
+    pullText:'Fetch by mobile',
+    estHint:'Estimates refresh every few seconds and include your visit type. Emergency and senior-citizen cases are prioritised automatically.',
+
+    queueH1:'Your live queue',
+    queueP:'Updated automatically as the counter moves. Keep this page open, or enable alerts and walk away.',
+    stepId:'Health ID verified (ABHA)',
+    stepToken:'issued at reception',
+    stepQueue:'Added to the {d} queue',
+    stepCall:'Called to {room}',
+    stepDone:'Consultation completed',
+    turnWait:'You are number {n} in the queue',
+    turnGo:'Please proceed to {room}',
+    emptyToken:'Check in to get a live token and queue position.',
+    emptyQueue:'No one waiting in this department right now.',
+    shareMsg:'My AI-ORCHESTRA token is {t} at {d}. Position {p}, about {e} min. {room}, {doc}.',
+
+    aptH1:'Appointments',
+    aptP:'Upcoming visits and recent ones. You can reschedule or cancel up to 2 hours before the slot.',
+    bookPanelLbl:'Book a new appointment',
+    bookBtn:'Book appointment',
+
+    repH1:'Reports & prescriptions',
+    repP:'Lab reports are released by the pathology department and stay available for 12 months.',
+    repPanelLbl:'Lab reports',
+    repColT:'Test', repColAt:'Ordered',
+    authority:'Pathology',
+    sumPanelLbl:'Visit summary',
+    sumK:'Visits this year', sumV:6, sumM:'Across 3 departments',
+    sumPendingK:'Reports pending', sumPendingM:'Pathology',
+    sumHint:'Your last consultation was with Dr. Meera Rao (Cardiology) on 12 Feb 2025. Records are fetched live from your ABHA health ID.',
+    itemsPanelLbl:'Prescriptions', itemsNote:'3 active',
+    docTitle:'AI-ORCHESTRA — Lab Report',
+    docBy:'Department   : {by}', docFacility:'Facility     : {f}',
+    docFoot:'This is a synthetic demo report.',
+    repReleased:'Report released', repUpToDate:'Already up to date', repUpToDateB:'All pathology reports have been released.',
+    noReports:'Reports appear here once pathology releases them.',
+
+    rec:{
+      abha:[['Date of birth',PATIENT.dob],['Gender',PATIENT.sex],['Age',PATIENT.age + ' yrs'],
+            ['Blood group',PATIENT.blood],['Mobile',PATIENT.phone],['Last visit','Cardiology · 12 Feb 2025']],
+      aadhaar:[['Name on Aadhaar',PATIENT.name],['Date of birth',PATIENT.dob],['Gender',PATIENT.sex],
+            ['Address',PATIENT.address],['Mobile',PATIENT.phone],['Preferred language',PATIENT.lang]]
+    },
+    flag:{
+      abha:{ kind:'warn', text:'Allergy on record: ' + PATIENT.allergy },
+      aadhaar:{ kind:'info', text:'Address on Aadhaar: ' + PATIENT.address + ' · used for e-KYC' }
+    },
+
+    queues:{
+      'Cardiology':       { code:'C', serving:'A-204', per:6,  counters:3, open:4, room:'Room 203', officer:'Dr. Meera Rao',
+                            queue:['A-205','A-206','A-207','A-208','A-209','A-210'], types:{ new:8, follow:4, proc:14 } },
+      'General Medicine': { code:'G', serving:'A-118', per:4,  counters:2, open:4, room:'Room 202', officer:'Dr. S. Iyer',
+                            queue:['A-119','A-120','A-121','A-122','A-123','A-124'], types:{ new:6, follow:3, proc:11 } },
+      'Orthopaedics':     { code:'O', serving:'O-061', per:9,  counters:2, open:2, room:'Room 202', officer:'Dr. A. Kulkarni',
+                            queue:['O-062','O-063','O-064','O-065','O-066'],           types:{ new:12, follow:6, proc:20 } },
+      'Paediatrics':      { code:'P', serving:'P-032', per:5,  counters:2, open:2, room:'Room 202', officer:'Dr. R. Iyer',
+                            queue:['P-033','P-034','P-035','P-036'],                 types:{ new:7, follow:4, proc:12 } },
+      'Radiology':        { code:'R', serving:'R-088', per:7,  counters:1, open:3, room:'Room 201', officer:'Dr. N. Bose',
+                            queue:['R-089','R-090','R-091','R-092','R-093','R-094','R-095'], types:{ new:9, follow:5, proc:15 } }
+    },
+
+    apts:[
+      { id:1, day:'18', mon:'SEP', dept:'Cardiology',       doc:'Dr. Meera Rao',   time:'09:30', type:'Follow-up',    status:'Confirmed' },
+      { id:2, day:'24', mon:'SEP', dept:'Orthopaedics',     doc:'Dr. A. Kulkarni', time:'11:00', type:'New consult',  status:'Confirmed' },
+      { id:3, day:'02', mon:'AUG', dept:'General Medicine', doc:'Dr. S. Iyer',     time:'16:15', type:'Follow-up',    status:'Completed' },
+      { id:4, day:'21', mon:'JUL', dept:'Radiology',        doc:'Dr. N. Bose',     time:'10:30', type:'Scan',         status:'Cancelled' }
+    ],
+
+    reports:[
+      { t:'Complete Blood Count (CBC)',    at:'14 Sep 2025', st:'Ready',      dl:false, by:'Dr. S. Iyer · General Medicine',
+        rows:[['Haemoglobin','13.8 g/dL','Normal'],['WBC','7,200 /uL','Normal'],['Platelets','2.4 Lakh/uL','Normal'],
+              ['Creatinine','0.9 mg/dL','Normal'],['LDL','96 mg/dL','Borderline'],['HDL','52 mg/dL','Normal']] },
+      { t:'Lipid Profile',                 at:'14 Sep 2025', st:'Ready',      dl:false, by:'Dr. S. Iyer · General Medicine',
+        rows:[['Total cholesterol','186 mg/dL','Borderline'],['LDL','96 mg/dL','Borderline'],['HDL','52 mg/dL','Normal'],
+              ['Triglycerides','128 mg/dL','Normal'],['VLDL','28 mg/dL','Normal'],['Non-HDL','134 mg/dL','Borderline']] },
+      { t:'Chest X-Ray (PA view)',         at:'12 Feb 2025', st:'Ready',      dl:true,  by:'Dr. N. Bose · Radiology',
+        rows:[['Projection','PA view',''],['Cardiomediastinal ratio','0.46','Normal'],['Lung fields','Clear','Normal'],
+              ['Costophrenic angles','Sharp','Normal'],['Bony thorax','Normal',''],['Impression','No active disease','Normal']] },
+      { t:'Thyroid Panel (T3, T4, TSH)',  at:'12 Feb 2025', st:'Processing', dl:false, by:'Dr. S. Iyer · General Medicine',
+        rows:[['T3','1.18 ng/mL',''],['T4','8.4 mcg/dL',''],['TSH','2.10 mIU/L',''],['Sample type','Serum',''],['Status','Awaiting immunoassay','Processing'],['Expected release','24 hours','Processing']] }
+    ],
+
+    items:[
+      { t:'Atorvastatin 10 mg', d:'Dr. Meera Rao · Cardiology', when:'Daily after dinner · 3 months' },
+      { t:'Aspirin 75 mg',      d:'Dr. Meera Rao · Cardiology', when:'Once daily · ongoing' },
+      { t:'Vitamin D3 60K',     d:'Dr. S. Iyer · General Medicine', when:'Weekly · 8 weeks' }
+    ]
+  },
+
+  government:{
+    key:'government',
+    facility:'District e-Gov Kendra',
+    brandSub:'District e-Gov Kendra',
+    org:'© 2025 District e-Gov Kendra · AI-ORCHESTRA',
+    title:'AI-ORCHESTRA — Government Services',
+    facilityPill:'All counters open · till 5:00 PM',
+    themeColor:'rgb(244,247,197)',
+    tabReports:'Documents',
+    switchTo:'Switch to hospital services',
+    helpToast:['Kendra help desk','Call 1800-000-222 for counter timings and document status. For medical emergencies dial 108.'],
+    emergency:{
+      lead:'This is a services office, not a hospital. For any medical emergency, call an ambulance before continuing with your counter work.',
+      main:{ lbl:'Call ambulance', num:'108', tel:'108', note:'Free 24x7 emergency ambulance, all India' },
+      alts:[
+        { lbl:'Any emergency', num:'112', tel:'112', note:'Police, fire, ambulance' },
+        { lbl:'Ambulance (alternative)', num:'102', tel:'102', note:'Pregnancy & child transport' }
+      ],
+      note:'Nearest 24x7 emergency department: District Government Medical College, 2.4 km from this Kendra.'
+    },
+
+    deptWord:'in this office',
+    defaultDept:'Aadhaar / UIDAI',
+    deptList:['Aadhaar / UIDAI','Passport Seva Kendra','RTO · Parivahan','Municipal · Civic','Post Office · India Post','Govt Medical College OPD'],
+    bookList:['Aadhaar / UIDAI','Passport Seva Kendra','RTO · Parivahan','Municipal · Civic','Post Office · India Post','Govt Medical College OPD'],
+
+    idTypes:['abha','aadhaar'],
+    idNote:'',
+    idHint:'Government counters accept either identity. ABHA carries your health history, Aadhaar is used for e-KYC.',
+    checkIdLbl:'Identity',
+
+    visitLabel:'Service type',
+    visitTypes:[{ v:'new', t:'New application' },{ v:'follow', t:'Follow-up' },{ v:'proc', t:'Verification / fee' }],
+    colType:'Service',
+
+    checkinH1:'Check in at a government office',
+    checkinP:'Verify your Aadhaar or <abbr title="Ayushman Bharat Health Account">ABHA</abbr> identity, choose the counter you are visiting, and we will issue a live token with an honest wait estimate.',
+    visitPanelLbl:'Service details',
+    deptLbl:'Office',
+    deptHint:'Your token is issued against the counter queue, so the wait estimate updates with the live queue.',
+    reasonHint:'Helps the counter officer route you faster. Do not write medical emergency details here — go to the nearest hospital.',
+    reasonPh:'e.g. Address update on Aadhaar, need the e-Aadhaar printout',
+    checkinBtnLbl:'Verify & get my token',
+    tokenToastT:'Token {t} issued',
+    tokenToastB:'Position {p} at {d} · about {m} min. Alerts on {ch}.',
+    scanText:'Scan your QR code at the kiosk, or fetch the record with one tap.',
+    pullText:'Fetch by mobile',
+    estHint:'Estimates refresh every few seconds and include your service type. Senior-citizen and differently-abled visitors are prioritised automatically.',
+
+    queueH1:'Your live token',
+    queueP:'Updated automatically as the counter moves. Keep this page open, or enable alerts and step aside.',
+    stepId:'Identity verified ({id})',
+    stepToken:'issued at the e-Gov counter',
+    stepQueue:'Added to the {d} counter queue',
+    stepCall:'Called to {room}',
+    stepDone:'Service completed',
+    turnWait:'You are number {n} in the counter queue',
+    turnGo:'Please proceed to {room}',
+    emptyToken:'Check in at a counter to get a live token and queue position.',
+    emptyQueue:'No one waiting at this counter right now.',
+    shareMsg:'My AI-ORCHESTRA token is {t} at {d}. Position {p}, about {e} min. {room}, {doc}.',
+
+    aptH1:'Appointments',
+    aptP:'Booked and walk-in visits across offices. You can reschedule or cancel up to 2 hours before the slot.',
+    bookPanelLbl:'Book an appointment',
+    bookBtn:'Book appointment',
+
+    repH1:'Documents & schemes',
+    repP:'Issued documents are released by the department and stay available for 12 months.',
+    repPanelLbl:'Issued documents',
+    repColT:'Document', repColAt:'Issued',
+    authority:'Issuing authority',
+    sumPanelLbl:'Service summary',
+    sumK:'Visits this year', sumV:4, sumM:'Across 4 offices',
+    sumPendingK:'Documents pending', sumPendingM:'Issuing authority',
+    sumHint:'Your last visit was to the Aadhaar enrolment centre on 14 Sep 2025. Records are fetched live from your verified identity.',
+    itemsPanelLbl:'Schemes & applications', itemsNote:'3 active',
+    docTitle:'AI-ORCHESTRA — Issued Document',
+    docBy:'Issued by    : {by}', docFacility:'Office       : {f}',
+    docFoot:'This is a synthetic demo document.',
+    repReleased:'Document released', repUpToDate:'Already up to date', repUpToDateB:'All documents have been released.',
+    noReports:'Documents appear here once the department releases them.',
+
+    rec:{
+      abha:[['Date of birth',PATIENT.dob],['Gender',PATIENT.sex],['Age',PATIENT.age + ' yrs'],
+            ['Mobile',PATIENT.phone],['Preferred language',PATIENT.lang],['Last visit','Aadhaar · 14 Sep 2025']],
+      aadhaar:[['Name on Aadhaar',PATIENT.name],['Date of birth',PATIENT.dob],['Gender',PATIENT.sex],
+            ['Address',PATIENT.address],['Mobile',PATIENT.phone],['Preferred language',PATIENT.lang]]
+    },
+    flag:{
+      abha:{ kind:'info', text:'ABHA is linked — your hospital history is shared with empanelled counters' },
+      aadhaar:{ kind:'info', text:'Address on Aadhaar: ' + PATIENT.address + ' · used for e-KYC' }
+    },
+
+    queues:{
+      'Aadhaar / UIDAI':            { code:'A', serving:'A-318', per:4,  counters:2, open:3, room:'Counter 2',
+                            officer:'K. Lakshmi · Enrollment Operator',
+                            queue:['A-319','A-320','A-321','A-322','A-323','A-324'], types:{ new:7, follow:4, proc:12 } },
+      'Passport Seva Kendra':       { code:'P', serving:'P-142', per:9,  counters:3, open:3, room:'Window 3',
+                            officer:'R. Natarajan · Seva Executive',
+                            queue:['P-143','P-144','P-145','P-146','P-147','P-148','P-149'], types:{ new:10, follow:5, proc:18 } },
+      'RTO · Parivahan':            { code:'R', serving:'R-076', per:11, counters:2, open:2, room:'Window 1',
+                            officer:'S. Deshpande · MV Inspector',
+                            queue:['R-077','R-078','R-079','R-080','R-081','R-082'], types:{ new:14, follow:6, proc:22 } },
+      'Municipal · Civic':          { code:'M', serving:'M-211', per:6,  counters:1, open:2, room:'Section 4',
+                            officer:'B. Gowda · Section Officer',
+                            queue:['M-212','M-213','M-214','M-215','M-216','M-217'], types:{ new:8, follow:4, proc:13 } },
+      'Post Office · India Post':   { code:'O', serving:'O-095', per:5,  counters:1, open:1, room:'Counter 1',
+                            officer:'P. Rathore · Counter Operator',
+                            queue:['O-096','O-097','O-098','O-099','O-100'], types:{ new:6, follow:3, proc:10 } },
+      'Govt Medical College OPD':   { code:'G', serving:'G-064', per:4,  counters:2, open:4, room:'Room 302',
+                            officer:'Dr. A. Iyer · Medical Officer',
+                            queue:['G-065','G-066','G-067','G-068','G-069','G-070'], types:{ new:6, follow:3, proc:11 } }
+    },
+
+    apts:[
+      { id:11, day:'22', mon:'SEP', dept:'Passport Seva Kendra', doc:'R. Natarajan · Seva Executive',      time:'10:15', type:'Renewal',    status:'Confirmed' },
+      { id:12, day:'26', mon:'SEP', dept:'Aadhaar / UIDAI',      doc:'K. Lakshmi · Enrollment Operator',   time:'09:30', type:'Update',     status:'Confirmed' },
+      { id:13, day:'02', mon:'OCT', dept:'RTO · Parivahan',       doc:'S. Deshpande · MV Inspector',         time:'14:00', type:'Test',       status:'Confirmed' },
+      { id:14, day:'05', mon:'SEP', dept:'Municipal · Civic',     doc:'B. Gowda · Section Officer',         time:'11:45', type:'Collection', status:'Completed' },
+      { id:15, day:'24', mon:'JUL', dept:'Post Office · India Post', doc:'P. Rathore · Counter Operator',    time:'10:00', type:'Closure',    status:'Cancelled' }
+    ],
+
+    reports:[
+      { t:'e-Aadhaar (updated)',            at:'14 Sep 2025', st:'Ready',      dl:false, by:'Aadhaar / UIDAI · District e-Gov Kendra',
+        rows:[['Name on Aadhaar',PATIENT.name,''],['Aadhaar number','XXXX XXXX ' + IDS.aadhaar.tail,''],
+              ['Date of birth',PATIENT.dob,''],['Address',PATIENT.address,''],
+              ['Issue date','14 Sep 2025',''],['Status','Valid · digitally signed','Normal']] },
+      { t:'Birth Certificate',              at:'12 Feb 2025', st:'Ready',      dl:true,  by:'Municipal · Civic · Ward 42',
+        rows:[['Registration no','BC/2019/4471',''],['Name',PATIENT.name,''],['Date of birth',PATIENT.dob,''],
+              ['Place of birth','Sunrise General Hospital, Bengaluru',''],['Date of registration','20 Mar 2019',''],
+              ['Certified by','B. Gowda · Section Officer','Normal']] },
+      { t:'Passport Application Receipt',   at:'02 Sep 2025', st:'Ready',      dl:false, by:'Passport Seva Kendra · PSK Bengaluru',
+        rows:[['Application no','PSK-BLR-2025-118742',''],['Service','Re-issue (renewal)',''],
+              ['Appointment','22 Sep 2025 · 10:15',''],['Documents submitted','6 of 6','Normal'],
+              ['Police verification','Cleared','Normal'],['Next step','Print and attend on appointment day','']] },
+      { t:'RC Transfer Acknowledgement',    at:'28 Aug 2025', st:'Processing', dl:false, by:'RTO · Parivahan · Bengaluru South',
+        rows:[['Application no','PAR/2025/RT/90733',''],['Service','RC transfer',''],['Applicant',PATIENT.name,''],
+              ['RTO office','RTO Bengaluru South',''],['Status','Under verification','Processing'],
+              ['Expected','within 21 working days','Processing']] },
+      { t:'Ayushman Bharat Card',           at:'11 Jan 2025', st:'Ready',      dl:true,  by:'Govt Medical College OPD · NHA empanelled',
+        rows:[['Beneficiary name',PATIENT.name,''],['PMJAY number','AB-2233-4471-0099',''],
+              ['Coverage','₹5,00,000 per family / year',''],['Hospitals empanelled','Sunrise General + 12 more',''],
+              ['Valid till','11 Jan 2026',''],['Status','Active','Normal']] }
+    ],
+
+    items:[
+      { t:'PM-KUSUM solar pump', d:'Block Agriculture Office · Scheme PM-KUSUM', when:'Application under verification · 21 days' },
+      { t:'Atal Pension Yojana', d:'Tehsil Office · Social Security',             when:'₹1,000 / month · active since Jan 2025' },
+      { t:'Post Office Savings RD', d:'BMC Road Branch · India Post',               when:'₹500 / month · next due 05 Oct' }
+    ]
+  }
+};
+
+/* ============================================================
+   SESSION + SCREEN ROUTER
+   ============================================================ */
+const session = { signedIn:false, idType:null, idFull:null, sector:null, at:null };
+const STORE  = { hospital:null, government:null };
+let SECTOR  = 'hospital';
+let state   = null;
+let tickTimer = null;
+let loginType  = 'abha';
+
+/* ============================================================
+   SESSION PERSISTENCE (survives a reload — you keep your token)
+   ============================================================ */
+const SAVE_KEY = 'ai-orchestra.v1';
+function saveSession(){
+  try{ sessionStorage.setItem(SAVE_KEY, JSON.stringify({ session:session, STORE:STORE, SECTOR:SECTOR })); }catch(e){}
+}
+function restoreSession(){
+  try{
+    const raw = sessionStorage.getItem(SAVE_KEY);
+    if(!raw) return false;
+    const d = JSON.parse(raw);
+    if(!d || !d.session || !d.session.signedIn) return false;
+    Object.assign(session, d.session);
+    Object.assign(STORE, d.STORE || {});
+    loginType = session.idType || 'abha';
+    setLoginType(loginType);
+    loadSector(SECTORS[d.SECTOR] ? d.SECTOR : 'hospital');
+    if(session.sector){
+      showScreen('app');
+      setTab(location.hash.replace('#','') || state.tab || 'checkin');
+    } else {
+      paintGate();
+      showScreen('gate');
+    }
+    return true;
+  }catch(e){ return false; }
+}
+
+function showScreen(name){
+  const screens = { app:$('#scrApp'), gate:$('#scrGate'), login:$('#scrLogin') };
+  Object.keys(screens).forEach(k => {
+    const on = k === name;
+    const el = screens[k];
+    el.hidden = !on;
+    el.setAttribute('aria-hidden', String(!on));
+    el.inert = !on;
+  });
+  if(name !== 'app') stopTick();
+  const head = name === 'login' ? $('#loginH1') : name === 'gate' ? $('#gateH1') : null;
+  if(head) head.focus();
+  document.title =
+    name === 'login' ? 'Sign in — AI-ORCHESTRA' :
+    name === 'gate'  ? 'Choose a service — AI-ORCHESTRA' :
+                       SECTORS[SECTOR].title;
+  window.scrollTo(0, 0);
+}
+
+function loadSector(key){
+  SECTOR = key;
+  document.documentElement.dataset.sector = key;
+  if(!STORE[key]) STORE[key] = freshState(key);
+  state = STORE[key];
+  paintHeader();
+  paintDeptSelects();
+  paintVisitSeg();
+  paintIdSeg();
+  renderAll();
+}
+
+function setSector(key){
+  loadSector(key);
+  session.sector = key;
+  saveSession();
+  showScreen('app');
+  setTab(location.hash.replace('#','') || 'checkin');
+}
+
+function signOut(){
+  session.signedIn = false; session.idType = null; session.at = null;
+  setLoginType('abha');
+  showScreen('login');
+}
+
+function paintHeader(){
+  const S = SECTORS[SECTOR];
+  $('#brandSub').textContent    = S.brandSub;
+  $('#facilityTxt').textContent = S.facilityPill;
+  $('#tabReportsLbl').textContent = S.tabReports;
+  $('#footOrg').textContent     = S.org;
+  $('#switchBtn').title = S.switchTo;
+  $('#switchBtn').setAttribute('aria-label', S.switchTo);
+  $('#whoId').textContent = IDS[state.idType].short + ' linked';
+  $('#themeMeta').content = S.themeColor;
+}
+
+function freshState(key){
+  const S = SECTORS[key];
+  const s = {
+    tab:'checkin', dept:S.defaultDept, visit:'new', idType:S.idTypes[0],
+    idReady:false, idBusy:false, token:null, served:0, seq:{},
+    apts:S.apts.map(a => Object.assign({}, a)),
+    reports:S.reports.map(r => Object.assign({}, r)),
+    items:S.items.map(i => Object.assign({}, i)),
+    queues:{}
+  };
+  Object.keys(S.queues).forEach(name => {
+    const q = S.queues[name];
+    s.queues[name] = { code:q.code, serving:q.serving, per:q.per, counters:q.counters, open:q.open, room:q.room, officer:q.officer, queue:q.queue.slice() };
+    s.seq[q.code] = parseInt(q.serving.split('-')[1], 10);
+  });
+  return s;
+}
+
+function S(){ return SECTORS[SECTOR]; }
+function q(dept){ return state.queues[dept || state.dept]; }
+function cfg(dept){ return SECTORS[SECTOR].queues[dept || state.dept]; }
+function officerFor(dept){ return cfg(dept).officer; }
+function visitMult(){ return state.visit === 'follow' ? .6 : state.visit === 'proc' ? 1.6 : 1; }
+
+/* ============================================================
+   TOASTS
+   ============================================================ */
+function toast(title, body, kind){
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.dataset.kind = kind || 'info';
+  el.innerHTML = '<span class="bar"></span><span><b>' + esc(title) + '</b><span>' + esc(body || '') + '</span></span>';
+  $('#toasts').appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 250); }, 4600);
+}
+
+/* ============================================================
+   TABS
+   ============================================================ */
+function setTab(key, focus){
+  if(!session.sector) return;
+  if(TABS.indexOf(key) < 0) key = 'checkin';
+  state.tab = key;
+  $$('.tab').forEach(t => {
+    const on = t.dataset.tab === key;
+    t.setAttribute('aria-selected', String(on));
+    t.tabIndex = on ? 0 : -1;
+    if(on && focus) t.focus();
+  });
+  $$('.view').forEach(v => {
+    const on = v.id === 'v-' + key;
+    v.classList.toggle('is-active', on);
+    v.hidden = !on;
+  });
+  if(key === 'queue'){ stopTick(); startTick(); }
+  if(location.hash !== '#' + key) history.replaceState(null, '', '#' + key);
+  renderFloater();
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+$('#tabs').addEventListener('keydown', e => {
+  const from = e.target.closest ? e.target.closest('.tab') : null;
+  const i = from ? TABS.indexOf(from.dataset.tab) : (state ? TABS.indexOf(state.tab) : -1);
+  let j = -1;
+  if(e.key === 'ArrowRight') j = (i + 1) % TABS.length;
+  else if(e.key === 'ArrowLeft') j = (i - 1 + TABS.length) % TABS.length;
+  else if(e.key === 'Home') j = 0;
+  else if(e.key === 'End') j = TABS.length - 1;
+  if(i < 0 || j < 0) return;
+  e.preventDefault();
+  setTab(TABS[j], true);
+});
+$('#tabs').addEventListener('click', e => {
+  const b = e.target.closest('.tab');
+  if(b) setTab(b.dataset.tab);
+});
+window.addEventListener('hashchange', () => {
+  if(!session.sector) return;
+  const k = location.hash.replace('#','');
+  if(TABS.indexOf(k) > -1) setTab(k);
+});
+
+/* ============================================================
+   LOGIN — ABHA / Aadhaar + OTP
+   ============================================================ */
+function setLoginType(type){
+  loginType = type;
+  const T = IDS[type];
+  $$('#idSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.id === type)));
+  $('#loginName').textContent   = PATIENT.name;
+  $('#loginIdLine').textContent = T.label + ' ···· ' + T.tail;
+  $('#loginIdPill').textContent = T.short;
+}
+function signIn(){
+  const btn = $('#signInBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span>Signing you in…';
+  setTimeout(() => {
+    btn.disabled = false;
+    btn.innerHTML = '<svg aria-hidden="true"><use href="#i-arrow"/></svg>Continue as ' + esc(PATIENT.name);
+    session.signedIn = true;
+    session.idType = loginType;
+    session.at = nowTime();
+    saveSession();
+    paintGate();
+    showScreen('gate');
+  }, 600);
+}
+function paintGate(){
+  const T = IDS[session.idType] || IDS.abha;
+  $('#gateName').textContent = PATIENT.name;
+  $('#gateId').textContent   = 'Signed in with ' + T.short + ' ···· ' + T.tail;
+  $('#gateIdPill').textContent = T.short;
+}
+
+/* ============================================================
+   CHECK-IN FORM
+   ============================================================ */
+function paintDeptSelects(){
+  const sec = S();
+  $('#deptLbl').textContent   = sec.deptLbl;
+  $('#bDeptLbl').textContent = sec.deptLbl;
+  $('#deptHint').textContent = sec.deptHint;
+  $('#dept').innerHTML = sec.deptList
+    .map(n => '<option' + (n === state.dept ? ' selected' : '') + '>' + esc(n) + '</option>').join('');
+  $('#bDept').innerHTML = sec.bookList
+    .map(n => '<option' + (n === state.dept ? ' selected' : '') + '>' + esc(n) + '</option>').join('');
+}
+function paintVisitSeg(){
+  const sec = S();
+  $('#visitLbl').textContent = sec.visitLabel;
+  $('#visitSeg').innerHTML = sec.visitTypes
+    .map(v => '<button type="button" aria-pressed="' + (v.v === state.visit) + '" data-v="' + v.v + '">' + esc(v.t) + '</button>')
+    .join('');
+}
+function paintIdSeg(){
+  const sec = S();
+  const parts = [];
+  if(sec.idTypes.length > 1){
+    parts.push('<div class="seg" id="checkIdSeg" role="group" aria-labelledby="checkIdLbl">' +
+      sec.idTypes.map(t => '<button type="button" aria-pressed="' + (t === state.idType) + '" data-id="' + t + '">' + esc(IDS[t].label) + '</button>').join('') +
+      '</div><p class="hint">' + esc(sec.idHint) + '</p>');
+  } else {
+    parts.push('<p class="hint">' + esc(sec.idNote) + ' · <b>' + esc(IDS[state.idType].label) + '</b></p>');
+  }
+  parts.push('<div id="idStatus" style="margin-top:14px"></div>');
+  $('#checkIdLbl').textContent = sec.checkIdLbl;
+  $('#checkIdBox').innerHTML = parts.join('');
+
+  const seg = $('#checkIdSeg');
+  if(seg) seg.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if(!b) return;
+    $$('#checkIdSeg button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    state.idType = b.dataset.id;
+    state.idReady = false;
+    state.idBusy = false;
+    $('#whoId').textContent = IDS[state.idType].short + ' linked';
+    if(state.token){
+      const cq = state.queues[state.token.dept];
+      const i = cq.queue.indexOf(state.token.id);
+      if(i > -1) cq.queue.splice(i, 1);
+      state.token = null;
+      $('#queueCount').textContent = '0';
+      renderQueue();
+    }
+    renderIdentity();
+    paintPreview();
+  });
+}
+
+function renderIdentity(){
+  const box = $('#idStatus');
+  if(!box) return;
+  const sec = S();
+  const T = IDS[state.idType];
+
+  if(state.idBusy){
+    box.innerHTML = '<div class="scan"><span class="spin"></span><br />' + esc(T.gateway) + '</div>';
+    return;
+  }
+  if(!state.idReady){
+    box.innerHTML =
+      '<div class="scan"><svg><use href="#i-qr"/></svg>' + esc(sec.scanText) +
+      '<div style="margin-top:16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">' +
+        '<button class="btn btn-primary btn-sm" id="scanBtn"><svg><use href="#i-qr"/></svg>Scan &amp; Share</button>' +
+        '<button class="btn btn-sm" id="pullBtn"><svg><use href="#i-refresh"/></svg>' + esc(sec.pullText) + '</button>' +
+      '</div></div>';
+    $('#scanBtn').addEventListener('click', verifyId);
+    $('#pullBtn').addEventListener('click', verifyId);
+    return;
+  }
+
+  const recs = sec.rec[state.idType] || sec.rec.abha;
+  const flag = (sec.flag[state.idType] || sec.flag.abha);
+  box.innerHTML =
+    '<div class="abha-id">' +
+      '<span class="ic"><svg><use href="#i-id"/></svg></span>' +
+      '<span><b>' + esc(PATIENT.name) + '</b><span class="n">' + esc(T.label) + ' ' + esc(T.mask) + '</span></span>' +
+      '<span class="pill pill-xs pill-lilac" style="margin-left:auto"><span class="d"></span>Verified</span>' +
+    '</div>' +
+    '<div class="rec">' +
+      recs.map(r => '<div><div class="k">' + esc(r[0]) + '</div><div class="v num">' + esc(r[1]) + '</div></div>').join('') +
+    '</div>' +
+    (flag.kind === 'warn'
+      ? '<div class="alert-flag"><svg><use href="#i-alert"/></svg>' + esc(flag.text) + '</div>'
+      : '<div class="flag-note">' + esc(flag.text) + '</div>');
+}
+
+function verifyId(){
+  if(state.idBusy || state.idReady) return;
+  state.idBusy = true;
+  renderIdentity();
+  setTimeout(() => {
+    state.idBusy = false;
+    state.idReady = true;
+    renderIdentity();
+    toast(IDS[state.idType].label + ' verified', IDS[state.idType].ok, 'ok');
+  }, 1000);
+}
+
+$('#visitSeg').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if(!b) return;
+  $$('#visitSeg button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  state.visit = b.dataset.v;
+  paintPreview();
+});
+$('#dept').addEventListener('change', e => { state.dept = e.target.value; paintPreview(); });
+
+function aheadCount(){
+  const cq = q();
+  if(!state.token || state.token.dept !== state.dept) return cq.queue.length;
+  return cq.queue.length + (cq.queue.indexOf(state.token.id) > -1 ? 0 : 1);
+}
+function waitMins(){
+  return q().per * visitMult();
+}
+function fill(tpl, vars){ return tpl.replace(/\{(\w+)\}/g, (m, k) => (vars[k] != null ? vars[k] : m)); }
+
+function paintPreview(){
+  const sec = S();
+  const cq = q();
+  const ahead = aheadCount();
+  $('#deptPill').textContent = state.dept;
+  $('#pvServing').textContent = cq.serving;
+  $('#pvCounter').textContent = cq.counters;
+  $('#pvOpen').textContent = cq.open;
+  $('#pvPer').textContent = cq.per;
+  $('#pvAhead').textContent = ahead;
+  $('#pvWait').innerHTML = '~' + Math.round(waitMins() * (ahead / 6 + .4)) + ' <small>min</small>';
+  $('#pvOpenM').textContent = 'of ' + cq.counters + ' ' + sec.deptWord;
+
+  $('#pvList').innerHTML = cq.queue.slice(0, 5).map((t, i) =>
+    '<tr><td class="tok strong">' + esc(t) + '</td>' +
+    '<td class="sub">' + (i === 0 ? 'Next' : 'In queue') + '</td>' +
+    '<td class="r num sub">~' + (cq.per * (i + 1)) + ' min</td></tr>'
+  ).join('') || '<tr><td class="empty" colspan="3">' + esc(sec.emptyQueue) + '</td></tr>';
+}
+
+$('#checkinBtn').addEventListener('click', () => {
+  if(!state.idReady){ verifyId(); return; }
+  const sec = S();
+  const cq = q();
+  if(state.token){
+    // release any earlier token so it cannot linger in another queue
+    const old = state.queues[state.token.dept];
+    const oi = old.queue.indexOf(state.token.id);
+    if(oi > -1) old.queue.splice(oi, 1);
+    toast('Previous token released', 'Token ' + state.token.id + ' left the ' + state.token.dept + ' queue.', 'warn');
+    state.token = null;
+  }
+  state.seq[cq.code]++;
+  const tk = cq.code + '-' + state.seq[cq.code];
+  const pos = cq.queue.length + 1;
+  const mins = Math.round(cq.per * pos * visitMult());
+
+  state.token = {
+    id:tk, dept:state.dept, visit:state.visit, pos,
+    eta:mins, room:cq.room, doctor:cq.officer,
+    at:nowTime(), channels:channels(), called:false
+  };
+  cq.queue.push(tk);
+  $('#queueCount').textContent = pos;
+  toast(fill(sec.tokenToastT, { t:tk }), fill(sec.tokenToastB, { p:pos, m:mins, d:state.dept, ch:state.token.channels.length ? state.token.channels.join(', ') : 'none — keep this page open' }), 'ok');
+  renderQueue();
+  paintPreview();
+  saveSession();
+  setTab('queue');
+});
+
+function channels(){ return $$('#chanBox input:checked').map(i => i.value); }
+
+/* ============================================================
+   MY QUEUE
+   ============================================================ */
+function renderFloater(){
+  const el = $('#floater');
+  const t = state && state.token;
+  const show = !!t && state.tab !== 'queue';
+  el.hidden = !show;
+  if(!show) return;
+  el.classList.toggle('call', !!t.called);
+  $('#flTok').textContent   = t.id;
+  $('#flPos').textContent   = t.called ? 'You are up now' : 'Position ' + t.pos + ' · ' + t.dept;
+  $('#flSub').textContent   = t.called
+    ? t.room + ' · ' + t.doctor
+    : '~' + t.eta + ' min · ' + t.room + ' · ' + t.doctor;
+  $('#flGoLbl').textContent = t.called ? 'Go in' : 'View queue';
+}
+
+function renderQueue(){
+  const body = $('#queueBody');
+  const sec = S();
+  const t = state.token;
+  renderFloater();
+  $('#queueCount').textContent = t ? (t.called ? 0 : t.pos) : 0;
+
+  if(!t){
+    body.innerHTML =
+      '<section class="panel"><div class="table-wrap"><table class="tbl"><tbody>' +
+      '<tr><td class="empty"><b>No active token</b>' + esc(sec.emptyToken) + '</td></tr>' +
+      '</tbody></table></div></section>';
+    return;
+  }
+
+  const pos = t.pos;
+  const called = pos <= 1;
+  const cq = state.queues[t.dept];
+  const pct = Math.max(4, Math.min(100, 100 - (pos / 12) * 100));
+
+  const steps = [
+    { t:fill(sec.stepId, { id:IDS[state.idType].short }), when:t.at, done:true },
+    { t:'Token ' + t.id + ' ' + sec.stepToken, when:t.at, done:true },
+    { t:fill(sec.stepQueue, { d:t.dept }), when:t.at, done:true },
+    { t:fill(sec.stepCall, { room:t.room }), when:called ? 'now' : '—', done:called, now:!called && pos <= 3 },
+    { t:sec.stepDone, when:'—' }
+  ];
+
+  body.innerHTML =
+    '<div class="turn' + (called ? ' call' : '') + '">' +
+      '<div><div class="lb">' + (called ? 'Your turn' : 'Now serving') + '</div><div class="big mono">' +
+        esc(called ? t.id : cq.serving) + '</div></div>' +
+      '<div class="tx"><b>' + esc(called ? fill(sec.turnGo, { room:t.room }) : fill(sec.turnWait, { n:pos })) + '</b>' +
+      '<span>' + esc(t.dept + ' · ' + t.doctor + ' · ' + t.room) + '</span></div>' +
+      '<div style="margin-left:auto;text-align:right">' +
+        '<span class="pill ' + (called ? 'pill-blue' : 'pill-cream') + '">' + (called ? 'Called' : 'Waiting') + '</span>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="board" style="margin-top:22px">' +
+      '<div><div class="k">Your token</div><div class="v mine mono">' + esc(t.id) + '</div></div>' +
+      '<div><div class="k">Position</div><div class="v num">' + (called ? 'Now' : pos) + (called ? '' : '<small> of ' + (pos + state.served) + '</small>') + '</div></div>' +
+      '<div><div class="k">Estimated wait</div><div class="v num">' + (called ? '0' : t.eta) + ' <small>min</small></div></div>' +
+    '</div>' +
+
+    '<div class="cols c-1-2" style="margin-top:22px">' +
+      '<section class="panel panel-pad">' +
+        '<div class="panel-head"><span class="panel-title"><svg><use href="#i-pin"/></svg>Progress</span></div>' +
+        '<div class="bar-track"><i style="width:' + pct + '%"></i></div>' +
+        '<div class="bar-meta"><span>Checked in <b>' + esc(t.at) + '</b></span><span>' + esc(t.room.split(' ')[0]) + ' <b>' + esc(t.room.split(' ').slice(1).join(' ')) + '</b></span></div>' +
+        '<p class="hint" style="margin-top:16px">' +
+          (t.channels.length
+            ? 'Alerts are sent ' + t.channels.length + ' slot' + (t.channels.length === 1 ? '' : 's') + ' before your turn via <b>' + esc(t.channels.join(', ')) + '</b>. This page refreshes on its own.'
+            : 'No alerts are set — keep this page open to follow your turn. It refreshes on its own.') + '</p>' +
+        '<div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap">' +
+          '<button class="btn btn-sm" id="shareBtn"><svg><use href="#i-share"/></svg>Share my status</button>' +
+          '<button class="btn btn-sm" id="helpCallBtn"><svg><use href="#i-head"/></svg>Call help desk</button>' +
+          '<button class="btn btn-sm btn-quiet" id="leaveBtn"><svg><use href="#i-x"/></svg>Leave queue</button>' +
+        '</div>' +
+      '</section>' +
+      '<section class="panel">' +
+        '<div class="panel-head"><span class="panel-title"><svg><use href="#i-clock"/></svg>What happens next</span></div>' +
+        '<ul class="tl">' + steps.map((s, i) => (
+          '<li class="' + (s.done ? 'done' : '') + (s.now ? ' now' : '') + '">' +
+            '<span class="n">' + (s.done ? '<svg><use href="#i-check"/></svg>' : i + 1) + '</span>' +
+            '<span class="t">' + esc(s.t) + '</span><span class="when">' + esc(s.when) + '</span>' +
+          '</li>'
+        )).join('') + '</ul>' +
+      '</section>' +
+    '</div>';
+
+  $('#shareBtn').addEventListener('click', () => {
+    const msg = fill(sec.shareMsg, { t:t.id, d:t.dept, p:pos, e:t.eta, room:t.room, doc:t.doctor });
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(msg).then(
+        () => toast('Status copied', 'Paste it to a family member or your officer.', 'ok'),
+        () => toast('Could not copy', msg, 'warn')
+      );
+    } else {
+      toast('Your status', msg, 'info');
+    }
+  });
+  $('#helpCallBtn').addEventListener('click', () => toast('Help desk notified', 'A volunteer will call you back at ' + PATIENT.phone + '.', 'ok'));
+  $('#leaveBtn').addEventListener('click', () => {
+    const cq2 = state.queues[t.dept];
+    const i = cq2.queue.indexOf(t.id);
+    if(i > -1) cq2.queue.splice(i, 1);
+    state.token = null;
+    stopTick();
+    $('#queueCount').textContent = 0;
+    renderQueue();
+    paintPreview();
+    toast('You left the queue', 'Token ' + t.id + ' released. You can check in again any time.', 'warn');
+    saveSession();
+    setTab('checkin');
+  });
+}
+
+/* live tick — the counter keeps moving */
+function startTick(){
+  stopTick();
+  tickTimer = setInterval(() => {
+    const t = state.token;
+    if(!t) return;
+    const cq = state.queues[t.dept];
+    if(t.called){ stopTick(); renderQueue(); return; }
+    if(cq.queue.length && cq.queue[0] === t.id){
+      t.called = true;
+      toast('You have been called', 'Please proceed to ' + t.room + ' · ' + t.doctor + '.', 'ok');
+    } else if(cq.queue.length){
+      cq.serving = cq.queue.shift();
+      state.served++;
+      t.pos = Math.max(1, t.pos - 1);
+      t.eta = Math.max(0, t.eta - cq.per);
+      $('#queueCount').textContent = t.pos;
+      if(t.pos === 3) toast('3 slots away', 'Get ready — you will be called shortly.', 'warn');
+    }
+    renderQueue();
+    paintPreview();
+  }, 5000);
+}
+function stopTick(){ if(tickTimer){ clearInterval(tickTimer); tickTimer = null; } }
+
+/* ============================================================
+   APPOINTMENTS
+   ============================================================ */
+const statusPill = s => s === 'Confirmed' ? 'pill-lilac' : s === 'Completed' ? 'pill-dim' : s === 'Cancelled' ? 'pill-rose' : 'pill-cream';
+
+function renderApts(){
+  const live = state.apts.filter(a => a.status !== 'Cancelled').length;
+  $('#aptSummary').textContent = live + ' upcoming';
+  $('#aptCount').textContent = state.apts.filter(a => a.status === 'Confirmed').length;
+
+  $('#aptList').innerHTML = state.apts.map(a => {
+    const cancelled = a.status === 'Cancelled';
+    const confirming = a.confirming;
+    return '<div class="apt' + (cancelled ? ' cancelled' : '') + '" data-id="' + a.id + '">' +
+      '<div class="when"><b class="num">' + esc(a.day) + '</b><span>' + esc(a.mon) + '</span></div>' +
+      '<div class="info"><b>' + esc(a.dept + ' · ' + a.type) + '</b><span>' + esc(a.doc + ' · ' + a.time) + '</span></div>' +
+      '<span class="pill ' + statusPill(a.status) + '">' + esc(a.status) + '</span>' +
+      (confirming
+        ? '<div class="confirm">Cancel this appointment?<button class="btn btn-sm btn-danger" data-yes="' + a.id + '">Yes, cancel</button>' +
+          '<button class="btn btn-sm btn-quiet" data-no="' + a.id + '">Keep it</button></div>'
+        : (a.status === 'Confirmed'
+            ? '<div class="acts"><button class="btn btn-sm" data-resch="' + a.id + '">Reschedule</button>' +
+              '<button class="btn btn-sm btn-quiet" data-cancel="' + a.id + '">Cancel</button></div>'
+            : '<div class="acts"></div>')) +
+    '</div>';
+  }).join('') || '<div class="table-wrap"><table class="tbl"><tbody><tr><td class="empty"><b>No appointments</b>Book a slot to see it here.</td></tr></tbody></table></div>';
+}
+
+$('#aptList').addEventListener('click', e => {
+  const yes = e.target.closest('[data-yes]'), no = e.target.closest('[data-no]');
+  const cancel = e.target.closest('[data-cancel]'), resch = e.target.closest('[data-resch]');
+  if(yes){
+    const a = state.apts.find(x => x.id === +yes.dataset.yes);
+    a.status = 'Cancelled'; a.confirming = false;
+    renderApts();
+    toast('Appointment cancelled', a.dept + ' on ' + a.day + ' ' + a.mon + ' has been released.', 'warn');
+  }
+  if(no){
+    const a = state.apts.find(x => x.id === +no.dataset.no);
+    a.confirming = false; renderApts();
+  }
+  if(cancel){
+    const a = state.apts.find(x => x.id === +cancel.dataset.cancel);
+    a.confirming = true; renderApts();
+  }
+  if(resch){
+    const a = state.apts.find(x => x.id === +resch.dataset.resch);
+    const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    const mi = MON.indexOf(a.mon);
+    const nd = new Date(new Date().getFullYear(), mi < 0 ? 0 : mi, parseInt(a.day, 10) + 1);
+    a.day = pad(nd.getDate());
+    a.mon = MON[nd.getMonth()];
+    renderApts();
+    toast('Appointment moved', a.dept + ' rescheduled to ' + a.day + ' ' + a.mon + ' at the same time.', 'ok');
+  }
+});
+
+function fillSlots(){
+  const dept = $('#bDept').value || S().defaultDept;
+  const slots = ['09:00','09:45','10:30','11:15','12:00','14:00','15:30','16:15'];
+  $('#bSlot').innerHTML = slots.map((s, i) =>
+    '<option value="' + s + '"' + (i === 2 ? ' selected' : '') + '>' + s + ' · ' + esc(dept) + '</option>'
+  ).join('');
+}
+$('#bDept').addEventListener('change', fillSlots);
+
+$('#bookBtn').addEventListener('click', () => {
+  const dept = $('#bDept').value;
+  const d = new Date($('#bDate').value || Date.now());
+  const day = pad(d.getDate());
+  const mon = d.toLocaleString('en', { month:'short' }).toUpperCase();
+  const time = $('#bSlot').value.split(' · ')[0];
+  state.apts.unshift({
+    id:Date.now(), day, mon, dept, doc:officerFor(dept), time, type:'New consult', status:'Confirmed'
+  });
+  renderApts();
+  toast('Appointment booked', dept + ' on ' + day + ' ' + mon + ' at ' + time + '.', 'ok');
+});
+
+/* ============================================================
+   REPORTS / DOCUMENTS
+   ============================================================ */
+function renderReports(){
+  const sec = S();
+  const pill = s => s === 'Ready' ? 'pill-lilac' : s === 'Processing' ? 'pill-cream' : 'pill-rose';
+  $('#repColT').textContent = sec.repColT;
+  $('#repColAt').textContent = sec.repColAt;
+  $('#reportList').innerHTML = state.reports.map((r, i) => (
+    '<tr>' +
+      '<td class="strong">' + esc(r.t) + (r.dl ? ' <span class="tag">downloaded</span>' : '') + '</td>' +
+      '<td class="sub num">' + esc(r.at) + '</td>' +
+      '<td><span class="pill ' + pill(r.st) + '">' + esc(r.st) + '</span></td>' +
+      '<td class="r">' + (r.st === 'Ready'
+        ? '<button class="btn btn-sm" data-dl="' + i + '">Download</button>'
+        : '<span class="sub">—</span>') + '</td>' +
+    '</tr>'
+  )).join('') || '<tr><td class="empty" colspan="4"><b>No ' + esc(sec.repPanelLbl.toLowerCase()) + '</b>' + esc(sec.noReports) + '</td></tr>';
+
+  const pending = state.reports.filter(r => r.st === 'Processing').length;
+  $('#reportCount').textContent = pending;
+  $('#sumPending').textContent = pending;
+  $('#sumVisits').textContent = sec.sumV;
+  $('#sumVisitsM').textContent = sec.sumM;
+  $('#sumPendingK').textContent = sec.sumPendingK;
+  $('#sumPendingM').textContent = sec.sumPendingM;
+}
+
+$('#reportList').addEventListener('click', e => {
+  const b = e.target.closest('[data-dl]');
+  if(!b) return;
+  const sec = S();
+  const r = state.reports[+b.dataset.dl];
+  const w = r.rows.reduce((m, x) => Math.max(m, x[0].length), 0);
+  const lines = r.rows.map(x => (x[0] + ':').padEnd(w + 3) + x[1] + (x[2] ? '    ' + x[2] : ''));
+  const body = [
+    sec.docTitle,
+    '='.repeat(30),
+    'Holder      : ' + PATIENT.name,
+    'Identity    : ' + IDS[state.idType].label + ' ' + IDS[state.idType].mask,
+    sec.repColT.padEnd(13) + ': ' + r.t,
+    sec.repColAt.padEnd(13) + ': ' + r.at,
+    fill(sec.docBy, { by:r.by }),
+    fill(sec.docFacility, { f:sec.facility }),
+    '-'.repeat(30),
+    lines.join('\n'),
+    '-'.repeat(30),
+    sec.docFoot
+  ].join('\n') + '\n';
+  const url = URL.createObjectURL(new Blob([body], { type:'text/plain' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = r.t.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.txt';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  r.dl = true;
+  renderReports();
+  toast(sec.tabReports === 'Reports' ? 'Report downloaded' : 'Document downloaded', r.t + ' saved to your device.', 'ok');
+});
+
+$('#refreshReports').addEventListener('click', () => {
+  const sec = S();
+  const p = state.reports.find(r => r.st === 'Processing');
+  if(p){
+    p.st = 'Ready';
+    renderReports();
+    toast(sec.repReleased, p.t + ' is now ready to download.', 'ok');
+  } else {
+    toast(sec.repUpToDate, sec.repUpToDateB, 'info');
+  }
+});
+
+function renderItems(){
+  const sec = S();
+  $('#itemsPanelLbl').textContent = sec.itemsPanelLbl;
+  $('#itemsNote').textContent = sec.itemsNote;
+  $('#itemsList').innerHTML = state.items.map(r => (
+    '<li class="done"><span class="n"><svg><use href="#i-check"/></svg></span>' +
+    '<span class="t"><b style="color:var(--txt);font-weight:500">' + esc(r.t) + '</b><br />' + esc(r.d) + '</span>' +
+    '<span class="when">' + esc(r.when) + '</span></li>'
+  )).join('');
+}
+
+/* ============================================================
+   VIEW HEADINGS
+   ============================================================ */
+function paintCopy(){
+  const sec = S();
+  $('#checkinH1').textContent = sec.checkinH1;
+  $('#checkinP').innerHTML = sec.checkinP;
+  $('#visitPanelLbl').textContent = sec.visitPanelLbl;
+  $('#checkinBtnLbl').textContent = sec.checkinBtnLbl;
+  $('#reasonHint').textContent = sec.reasonHint;
+  $('#reason').placeholder = sec.reasonPh;
+  $('#estHint').textContent = sec.estHint;
+  $('#pvColType').textContent = sec.colType;
+  $('#queueH1').textContent = sec.queueH1;
+  $('#queueP').textContent = sec.queueP;
+  $('#aptH1').textContent = sec.aptH1;
+  $('#aptP').textContent = sec.aptP;
+  $('#bookPanelLbl').textContent = sec.bookPanelLbl;
+  $('#bookBtnLbl').textContent = sec.bookBtn;
+  $('#repH1').textContent = sec.repH1;
+  $('#repP').textContent = sec.repP;
+  $('#repPanelLbl').textContent = sec.repPanelLbl;
+  $('#sumPanelLbl').textContent = sec.sumPanelLbl;
+  $('#sumHint').textContent = sec.sumHint;
+}
+
+function renderAll(){
+  paintCopy();
+  renderIdentity();
+  paintPreview();
+  renderQueue();
+  renderApts();
+  renderReports();
+  renderItems();
+  fillSlots();
+}
+
+/* ============================================================
+   EMERGENCY (SOS)
+   Reachable from every screen, deliberately kept off the queue
+   flow: it never depends on being checked in or on a live token.
+   ============================================================ */
+let sosOpener = null;
+
+function openSOS(){
+  const sec = S();
+  const em = sec.emergency;
+  if(!em) return;
+
+  $('#sosLead').textContent = em.lead;
+  $('#sosCallMain').href = 'tel:' + em.main.tel;
+  $('#sosCallMainLbl').textContent = em.main.lbl;
+  $('#sosCallMainNote').textContent = em.main.note;
+  $('#sosCallMainNum').textContent = em.main.num;
+  $('#sosNote').textContent = em.note;
+
+  $('#sosGrid').innerHTML = em.alts.map(a =>
+    '<a class="sos-alt" href="tel:' + esc(a.tel) + '">' +
+      '<svg aria-hidden="true"><use href="#i-phone"/></svg>' +
+      '<span class="tx"><b>' + esc(a.lbl) + '</b><span>' + esc(a.note) + '</span></span>' +
+      '<span class="num">' + esc(a.num) + '</span>' +
+    '</a>'
+  ).join('');
+
+  sosOpener = document.activeElement;
+  const modal = $('#sosModal');
+  modal.hidden = false;
+  document.body.style.overflow = 'hidden';
+  $('#sosCallMain').focus();
+}
+
+function closeSOS(){
+  const modal = $('#sosModal');
+  if(modal.hidden) return;
+  modal.hidden = true;
+  document.body.style.overflow = '';
+  /* send focus back to the trigger — never leave it stranded inside the
+     dialog we just hid, or the next Tab press restarts from the top */
+  if(sosOpener && document.contains(sosOpener) && sosOpener !== document.body) sosOpener.focus();
+  else $('#sosBtn').focus();
+  sosOpener = null;
+}
+
+function sosKey(e){
+  if($('#sosModal').hidden) return;
+  if(e.key === 'Escape'){ closeSOS(); return; }
+  if(e.key !== 'Tab') return;
+
+  /* keep tabbing inside the card while it is open */
+  const f = $$('#sosCard a[href], #sosCard button').filter(el => el.offsetParent !== null);
+  if(!f.length) return;
+  const first = f[0], last = f[f.length - 1];
+  if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+  else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+}
+
+/* ============================================================
+   WIRING + BOOT
+   ============================================================ */
+$('#idSeg').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if(b) setLoginType(b.dataset.id);
+});
+$('#signInBtn').addEventListener('click', signIn);
+
+$$('.pick').forEach(b => b.addEventListener('click', () => setSector(b.dataset.sector)));
+$('#signOutBtn').addEventListener('click', signOut);
+$('#switchBtn').addEventListener('click', () => { stopTick(); showScreen('gate'); });
+
+$('#floater').addEventListener('click', () => setTab('queue'));
+
+$('#helpBtn').addEventListener('click', () => {
+  const sec = S();
+  toast(sec.helpToast[0], sec.helpToast[1], 'info');
+});
+
+$('#sosBtn').addEventListener('click', openSOS);
+$('#sosX').addEventListener('click', closeSOS);
+$('#sosClose').addEventListener('click', closeSOS);
+$('#sosModal').addEventListener('click', e => { if(e.target === e.currentTarget) closeSOS(); });
+document.addEventListener('keydown', sosKey);
+
+$('#bDate').value = (d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()))(new Date());
+$('#bDate').min = $('#bDate').value;
+
+setLoginType('abha');
+if(!restoreSession()){
+  loadSector('hospital');
+  showScreen('login');
+}
+window.addEventListener('beforeunload', saveSession);
+document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'hidden') saveSession(); });
+</script>
+  <script>
+    const $ = (s) => document.querySelector(s);
+    const $$ = (s) => document.querySelectorAll(s);
+
+    // --- Navigation Logic ---
+    const screens = {
+      login: $('#scrLogin'),
+      gate: $('#scrGate'),
+      app: $('#scrApp')
+    };
+
+    function showScreen(id) {
+      if (!screens[id]) {
+        console.error(`Screen ${id} not found`);
+        return;
+      }
+      Object.values(screens).forEach(s => {
+        if (s) s.hidden = true;
+      });
+      screens[id].hidden = false;
+      window.scrollTo(0, 0);
+    }
+
+    $('#signInBtn').onclick = () => showScreen('gate');
+    
+    $$('.pick').forEach(btn => {
+      btn.onclick = () => {
+        const sector = btn.dataset.sector;
+        document.documentElement.dataset.sector = sector;
+        $('#brandSub').textContent = sector === 'hospital' ? 'Sunrise General Hospital' : 'District e-Gov Kendra';
+        $('#facilityTxt').textContent = sector === 'hospital' ? 'OPD open · till 8:00 PM' : 'Counter open · till 5:00 PM';
+        showScreen('app');
+      };
+    });
+
+    $('#signOutBtn').onclick = () => showScreen('login');
+    $('#backBtn').onclick = () => showScreen('gate');
+    $('#mainBackBtn').onclick = () => showScreen('gate');
+
+    // --- Tab Logic ---
+    $$('.tab').forEach(tab => {
+      tab.onclick = () => {
+        $$('.tab').forEach(t => t.setAttribute('aria-selected', 'false'));
+        tab.setAttribute('aria-selected', 'true');
+        
+        $$('.view').forEach(v => v.classList.remove('is-active'));
+        $(`#v-${tab.dataset.tab}`).classList.add('is-active');
+      };
+    });
+
+    // --- Sector Switcher ---
+    $('#switchBtn').onclick = () => showScreen('gate');
+
+    // Initialize
+    showScreen('login');
+  </script>
+</body>
+</html>

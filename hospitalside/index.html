@@ -1,0 +1,2056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI-ORCHESTRA — Hospital Operations Console</title>
+<meta name="description" content="AI-ORCHESTRA operations console: AI wait-time prediction, severity triage, dynamic queue optimisation, ABHA check-in, doctor console and departmental analytics." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    /* the four source colours — everything else is a tint, shade or mix */
+    --c-blue:rgb(58,134,255);
+    --c-lilac:rgb(189,178,255);
+    --c-pink:rgb(255,214,224);
+    --c-mist:rgb(255,244,244);
+
+    /* deep shades of the same hues — for ink on light fills */
+    --ink-blue:rgb(24,74,158);
+    --ink-rose:rgb(122,26,56);
+    --ink-plum:rgb(70,10,32);
+    --ink-dark:rgb(10,18,38);
+    --ink-indigo:rgb(28,22,52);
+
+    /* bright light surfaces, mixed from the mist and lilac tones */
+    --bg:rgb(245,243,251);
+    --surface:rgb(255,255,255);
+    --surface-2:rgb(249,247,254);
+    --surface-3:rgb(240,236,250);
+    --inset:rgb(251,249,255);
+
+    /* hairlines */
+    --line:rgba(88,84,120,.14);
+    --line-2:rgba(88,84,120,.24);
+    --line-3:rgba(88,84,120,.40);
+
+    /* type */
+    --txt:rgb(28,30,52);
+    --txt-2:rgb(62,64,94);
+    --muted:rgb(92,94,124);
+    --faint:rgb(112,114,144);
+
+    /* one purposeful accent — primary interactive elements only */
+    --accent:var(--c-blue);
+    --accent-2:var(--c-lilac);
+    --accent-ink:var(--ink-blue);
+    --accent-wash:rgba(58,134,255,.13);
+    --accent-bd:rgba(58,134,255,.44);
+    --on-accent:var(--ink-dark);
+    --shadow:0 8px 24px rgba(70,66,110,.16);
+
+    /* status — solid fills with dark ink for high contrast */
+    --ok:var(--c-lilac);         --ok-bd:rgb(150,138,225);         --ok-ink:var(--ink-indigo);
+    --info:rgba(58,134,255,.15);  --info-bd:rgba(58,134,255,.45);   --info-ink:var(--ink-blue);
+    --warn:var(--c-pink);         --warn-bd:rgb(240,170,190);       --warn-ink:var(--ink-rose);
+    --danger:rgb(214,120,150);    --danger-bd:rgb(186,84,118);      --danger-ink:var(--ink-plum);
+    --neutral:var(--surface-3);   --neutral-bd:var(--line-2);       --neutral-ink:var(--txt-2);
+
+    --r:10px;        /* panels */
+    --r-sm:6px;      /* controls */
+    --r-xs:4px;      /* pills, chips */
+    --sidebar:250px;
+    --topbar:56px;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+    font-size:14px;line-height:1.55;color:var(--txt);
+    background:var(--bg);-webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{font-weight:600;letter-spacing:-.014em;line-height:1.3}
+  button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+  a{color:inherit;text-decoration:none}
+  svg{display:block}
+  .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+  .mono{font-family:'JetBrains Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  abbr{border-bottom:1px dotted var(--line-3);cursor:help;text-decoration:none}
+  ::selection{background:rgba(58,134,255,.22);color:var(--txt)}
+
+  .skip{
+    position:absolute;left:12px;top:-64px;z-index:300;padding:10px 15px;
+    background:var(--accent);color:var(--on-accent);border-radius:var(--r-sm);
+    font-size:.8rem;font-weight:500;transition:top .18s ease;
+  }
+  .skip:focus{top:12px}
+  .hint{margin-top:6px;font-size:.72rem;color:var(--muted);line-height:1.45}
+  .fresh{
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    padding:10px 20px;border-top:1px solid var(--line);background:var(--inset);
+    font-size:.72rem;color:var(--muted);
+  }
+  .fresh b{color:var(--txt-2);font-weight:500}
+  .search-mini{position:relative;display:flex;align-items:center}
+  .search-mini svg{position:absolute;left:9px;width:13px;height:13px;fill:none;stroke:var(--muted);stroke-width:1.8;pointer-events:none}
+  .search-mini input{
+    width:196px;height:28px;padding:0 9px 0 27px;background:var(--surface);
+    border:1px solid var(--line-2);border-radius:var(--r-sm);font-size:.77rem;color:var(--txt);
+  }
+  .search-mini input::placeholder{color:var(--faint)}
+  .search-mini input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-wash)}
+  .data-note{display:flex;align-items:center;gap:7px;margin-top:10px;font-size:.68rem;color:var(--muted);line-height:1.45}
+
+  :focus-visible{outline:2px solid var(--accent-ink);outline-offset:2px;border-radius:3px}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:#DCD8EC;border:2px solid var(--bg);border-radius:10px}
+  ::-webkit-scrollbar-thumb:hover{background:#C9C2E4}
+
+  /* ============ APP SHELL ============ */
+  .app{display:grid;grid-template-columns:var(--sidebar) minmax(0,1fr);min-height:100vh}
+
+  .sidebar{
+    position:sticky;top:0;height:100vh;display:flex;flex-direction:column;
+    background:var(--surface);border-right:1px solid var(--line);
+  }
+  .brand{display:flex;align-items:center;gap:10px;height:var(--topbar);padding:0 18px;border-bottom:1px solid var(--line);flex:none}
+  .brand-mark{
+    width:28px;height:28px;border-radius:var(--r-xs);display:grid;place-items:center;flex:none;
+    background:var(--accent);color:var(--on-accent);font-size:.8rem;font-weight:700;
+  }
+  .brand-txt b{display:block;font-size:.86rem;font-weight:600;letter-spacing:-.01em}
+  .brand-txt span{display:block;font-size:.68rem;color:var(--muted);letter-spacing:.03em}
+
+  .side-body{flex:1;overflow-y:auto;padding:18px 12px}
+  .side-label{padding:0 8px;margin:0 0 8px;font-size:.63rem;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}
+  .side-group+.side-group{margin-top:24px}
+  .side-select{
+    width:100%;height:32px;padding:0 28px 0 9px;margin-bottom:18px;
+    background:var(--surface-2) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233E4060' stroke-width='2' stroke-linecap='round'><path d='m6 9 6 6 6-6'/></svg>") no-repeat right 8px center/13px;
+    border:1px solid var(--line-2);border-radius:var(--r-sm);appearance:none;
+    font-size:.78rem;color:var(--txt-2);cursor:pointer;
+  }
+  .side-nav{display:flex;flex-direction:column;gap:2px}
+  .side-item{
+    display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+    padding:9px 10px;border:1px solid transparent;border-radius:var(--r-sm);
+    background:none;color:var(--txt-2);font-size:.83rem;cursor:pointer;transition:background .14s,color .14s;
+  }
+  .side-item svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none;color:var(--muted)}
+  .side-item .lbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .side-item .key{font-size:.66rem;color:var(--faint);font-variant-numeric:tabular-nums}
+  .side-item:hover{background:var(--surface-2);color:var(--txt)}
+  .side-item[aria-current="page"]{background:var(--accent-wash);border-color:var(--accent-bd);color:var(--txt);font-weight:600}
+  .side-item[aria-current="page"] svg{color:var(--accent-ink)}
+  .side-item[aria-current="page"] .key{color:var(--muted)}
+
+  .side-foot{flex:none;border-top:1px solid var(--line);padding:12px}
+  .user{display:flex;align-items:center;gap:10px;padding:8px;border-radius:var(--r-sm);background:var(--inset);border:1px solid var(--line)}
+  .avatar{
+    width:30px;height:30px;border-radius:var(--r-xs);display:grid;place-items:center;flex:none;
+    background:var(--c-lilac);border:1px solid var(--ok-bd);color:var(--ink-indigo);
+    font-size:.7rem;font-weight:600;letter-spacing:.02em;
+  }
+  .user b{display:block;font-size:.78rem;font-weight:500}
+  .user span{display:block;font-size:.68rem;color:var(--muted)}
+
+  .main{min-width:0;display:flex;flex-direction:column}
+  .topbar{
+    position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;
+    height:var(--topbar);padding:0 24px;background:var(--surface);
+    border-bottom:1px solid var(--line);
+  }
+  .crumbs{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--muted);min-width:0}
+  .crumbs b{color:var(--txt-2);font-weight:500}
+  .crumbs .sep{color:rgba(88,84,120,.30)}
+  .search{position:relative;margin-left:auto;width:min(300px,34vw)}
+  .search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;fill:none;stroke:var(--muted);stroke-width:1.8;stroke-linecap:round}
+  .search input{
+    width:100%;height:32px;padding:0 10px 0 30px;background:var(--inset);
+    border:1px solid var(--line-2);border-radius:var(--r-sm);font-size:.8rem;color:var(--txt);
+  }
+  .search input::placeholder{color:var(--faint)}
+  .search input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-wash)}
+  .tb-div{width:1px;height:20px;background:var(--line-2);flex:none}
+  .tb-time{font-size:.75rem;color:var(--muted)}
+  .icon-btn{
+    position:relative;width:32px;height:32px;display:grid;place-items:center;flex:none;
+    background:var(--inset);border:1px solid var(--line-2);border-radius:var(--r-sm);color:var(--txt-2);cursor:pointer;
+  }
+  .icon-btn:hover{background:var(--surface-3);color:var(--txt)}
+  .icon-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .icon-btn .count{
+    position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;
+    background:var(--danger-bd);border:1px solid var(--danger);color:var(--danger-ink);
+    font-size:.6rem;font-weight:600;line-height:14px;text-align:center;
+  }
+  .menu-btn{display:none}
+
+  .content{flex:1;padding:28px 32px 64px}
+  .content-inner{max-width:1560px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+
+  /* ============ VIEW HEADER ============ */
+  .view{display:none;flex-direction:column;gap:22px}
+  .view.is-active{display:flex}
+  .view-head{display:flex;align-items:flex-start;gap:24px;flex-wrap:wrap}
+  .view-head .eyebrow{
+    font-size:.66rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:7px;
+  }
+  .view-head h1{font-size:1.42rem;letter-spacing:-.022em}
+  .view-sub{margin-top:7px;max-width:74ch;color:var(--txt-2);font-size:.855rem}
+  .view-actions{display:flex;align-items:center;gap:10px;margin-left:auto;padding-top:4px}
+
+  /* ============ PANELS ============ */
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);min-width:0}
+  .panel-pad{padding:22px 24px 24px}
+  .panel-head{
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    padding:15px 20px;border-bottom:1px solid var(--line);
+  }
+  .panel-pad>.panel-head{padding:0 0 16px;margin-bottom:20px;border-bottom:0}
+  .panel-title{display:flex;align-items:center;gap:9px;font-size:.86rem;font-weight:600;letter-spacing:-.005em;min-width:0}
+  .panel-title svg{width:16px;height:16px;fill:none;stroke:var(--accent-ink);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  .panel-note{font-size:.75rem;color:var(--muted);margin-left:auto}
+  .panel-body{padding:20px}
+
+  /* ============ BUTTONS ============ */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:7px;height:34px;padding:0 13px;
+    background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-sm);
+    font-size:.81rem;font-weight:500;color:var(--txt);cursor:pointer;white-space:nowrap;
+    transition:background .14s,border-color .14s,color .14s;
+  }
+  .btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .btn:hover{background:var(--surface-3);border-color:var(--line-3)}
+  .btn:active{background:var(--surface-2)}
+  .btn-primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:500}
+  .btn-primary:hover{background:var(--accent-2);border-color:var(--accent-2);color:var(--on-accent)}
+  .btn-sm{height:27px;padding:0 9px;font-size:.75rem;border-radius:var(--r-xs)}
+  .btn-quiet{background:transparent;border-color:transparent;color:var(--muted)}
+  .btn-quiet:hover{background:var(--surface-2);color:var(--txt)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn-danger{color:var(--danger-ink);border-color:var(--danger-bd);background:var(--danger)}
+  .btn-danger:hover{background:var(--accent-2);border-color:var(--accent-2);color:var(--on-accent)}
+
+  /* ============ PILLS / TAGS ============ */
+  .pill{
+    display:inline-flex;align-items:center;gap:5px;height:21px;padding:0 7px;
+    border:1px solid;border-radius:var(--r-xs);
+    font-size:.655rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;
+  }
+  .pill .dot{width:5px;height:5px;border-radius:1px;background:currentColor;flex:none}
+  .pill-ok{background:var(--ok);border-color:var(--ok-bd);color:var(--ok-ink)}
+  .pill-info{background:var(--info);border-color:var(--info-bd);color:var(--info-ink)}
+  .pill-warn{background:var(--warn);border-color:var(--warn-bd);color:var(--warn-ink)}
+  .pill-danger{background:var(--danger);border-color:var(--danger-bd);color:var(--danger-ink)}
+  .pill-neutral{background:var(--neutral);border-color:var(--neutral-bd);color:var(--neutral-ink)}
+  .pill-xs{height:18px;padding:0 6px;font-size:.6rem}
+  .tag{
+    display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:var(--r-xs);
+    background:var(--c-mist);border:1px solid var(--line-2);color:var(--txt-2);
+    font-size:.68rem;font-weight:500;
+  }
+  .tag-accent{background:var(--accent-wash);border-color:var(--accent-bd);color:var(--accent-ink)}
+
+  /* ============ TABLES ============ */
+  .table-wrap{overflow:auto;max-width:100%}
+  .tbl{width:100%;border-collapse:collapse;font-size:.81rem}
+  .tbl th{
+    position:sticky;top:0;z-index:1;text-align:left;height:34px;padding:0 16px;white-space:nowrap;
+    background:var(--surface-2);border-bottom:1px solid var(--line);
+    font-size:.635rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+  }
+  .tbl td{padding:11px 16px;border-bottom:1px solid var(--line);vertical-align:middle;white-space:nowrap}
+  .tbl tbody tr:last-child td{border-bottom:0}
+  .tbl tbody tr:hover td{background:rgba(58,134,255,.06)}
+  .tbl tbody tr.is-active td{background:var(--accent-wash)}
+  .tbl .r{text-align:right}
+  .tbl .tok{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:.78rem;letter-spacing:-.02em}
+  .tbl .strong{font-weight:500;color:var(--txt)}
+  .tbl .sub{color:var(--muted);font-size:.74rem}
+  .tbl .empty{padding:30px 16px;text-align:center;color:var(--muted);font-size:.81rem;white-space:normal}
+  .tbl .empty b{display:block;color:var(--txt-2);font-weight:500;margin-bottom:4px}
+  .tbl tbody tr[hidden]{display:none}
+  .tbl tr.new td{animation:rowIn .32s ease}
+  @keyframes rowIn{from{background:var(--accent-wash)}to{background:transparent}}
+
+  /* ============ FORMS ============ */
+  .field{margin-bottom:16px}
+  .field:last-child{margin-bottom:0}
+  .field>label{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:.72rem;font-weight:500;letter-spacing:.03em;color:var(--muted);text-transform:uppercase}
+  .field>label .val{margin-left:auto;color:var(--txt-2);text-transform:none;letter-spacing:0;font-variant-numeric:tabular-nums}
+  .input,select.input,textarea.input{
+    width:100%;height:34px;padding:0 10px;background:var(--surface);
+    border:1px solid var(--line-2);border-radius:var(--r-sm);color:var(--txt);font-size:.83rem;
+    transition:border-color .14s,box-shadow .14s;
+  }
+  textarea.input{height:auto;padding:9px 10px;resize:vertical;line-height:1.5}
+  .input::placeholder{color:var(--faint)}
+  .input:focus{outline:none;border-color:var(--accent-ink);box-shadow:0 0 0 3px var(--accent-wash)}
+  select.input{
+    appearance:none;padding-right:28px;cursor:pointer;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233E4060' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");
+    background-repeat:no-repeat;background-position:right 9px center;background-size:13px;
+  }
+  select.input option{background:#FFFFFF;color:var(--txt)}
+  .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px}
+  .form-grid .span-2{grid-column:1/-1}
+
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:18px;background:transparent;cursor:pointer;display:block}
+  input[type=range]::-webkit-slider-runnable-track{height:4px;background:var(--surface-3);border:1px solid var(--line-2);border-radius:3px}
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:14px;height:14px;margin-top:-6px;border-radius:50%;
+    background:var(--accent);border:1px solid var(--accent-ink);
+  }
+  input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px var(--accent-wash)}
+  input[type=range]::-moz-range-track{height:4px;background:var(--surface-3);border:1px solid var(--line-2);border-radius:3px}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--accent);border:1px solid var(--accent-ink)}
+
+  .seg{display:flex;flex-wrap:wrap;gap:6px}
+  .seg-opt{
+    height:30px;padding:0 11px;border:1px solid var(--line-2);border-radius:var(--r-sm);
+    background:var(--inset);color:var(--txt-2);font-size:.78rem;cursor:pointer;transition:.14s;
+  }
+  .seg-opt:hover{border-color:var(--line-3);color:var(--txt)}
+  .seg-opt[aria-pressed="true"]{background:var(--accent);border-color:var(--accent-ink);color:var(--on-accent);font-weight:600}
+
+  /* ============ AI LAYOUT ============ */
+  .ai-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:22px;align-items:start}
+  .split-2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;align-items:start}
+  .staff-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:22px;align-items:start}
+  .stack{display:flex;flex-direction:column;gap:22px}
+
+  /* verdict block */
+  .verdict{
+    margin-top:20px;padding:18px 20px;border:1px solid var(--line-2);border-radius:var(--r-sm);
+    background:var(--inset);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;
+  }
+  .verdict[data-tone="routine"]{border-color:var(--accent-bd);background:rgba(58,134,255,.09)}
+  .verdict[data-tone="urgent"]{border-color:var(--warn-bd);background:rgba(255,214,224,.30)}
+  .verdict[data-tone="critical"]{border-color:var(--danger-bd);background:rgba(214,120,150,.16)}
+  .v-cell .k{font-size:.635rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .v-cell .v{font-size:1.5rem;font-weight:600;letter-spacing:-.03em;line-height:1.15;margin-top:5px;display:flex;align-items:baseline;gap:5px}
+  .v-cell .v small{font-size:.72rem;font-weight:500;color:var(--muted);letter-spacing:0}
+  .v-cell .m{font-size:.7rem;color:var(--muted);margin-top:3px}
+  .v-note{margin-top:16px;padding-top:15px;border-top:1px solid var(--line);display:flex;gap:9px;font-size:.8rem;color:var(--txt-2)}
+  .v-note svg{width:15px;height:15px;flex:none;margin-top:2px;fill:none;stroke:var(--accent-ink);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .meter{height:5px;border-radius:3px;background:var(--surface-3);border:1px solid var(--line);overflow:hidden;margin-top:16px}
+  .meter i{display:block;height:100%;background:var(--accent);transition:width .45s ease}
+  .verdict[data-tone="urgent"] .meter i{background:var(--warn)}
+  .verdict[data-tone="critical"] .meter i{background:var(--danger)}
+
+  /* row lists (model registry, bottlenecks, resources) */
+  .rows{list-style:none}
+  .rows li{display:flex;align-items:center;gap:12px;padding:13px 20px;border-bottom:1px solid var(--line)}
+  .rows li:last-child{border-bottom:0}
+  .row-ic{
+    width:28px;height:28px;border-radius:var(--r-xs);display:grid;place-items:center;flex:none;
+    background:var(--c-pink);border:1px solid var(--warn-bd);color:var(--ink-rose);
+  }
+  .row-ic svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .row-txt{flex:1;min-width:0}
+  .row-txt b{display:block;font-size:.81rem;font-weight:500}
+  .row-txt span{display:block;font-size:.72rem;color:var(--muted)}
+  .row-val{text-align:right;flex:none}
+  .row-val b{display:block;font-size:.81rem;font-weight:500;font-variant-numeric:tabular-nums}
+  .row-val span{display:block;font-size:.68rem;color:var(--muted)}
+
+  /* bar charts */
+  .bars{display:flex;align-items:flex-end;gap:8px;height:132px;padding-top:22px}
+  .bar-col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:7px;height:100%}
+  .bar-col .val{font-size:.68rem;color:var(--txt-2);font-variant-numeric:tabular-nums}
+  .bar-col .bar{width:100%;max-width:34px;background:var(--accent);border:1px solid var(--accent-bd);border-bottom:0;border-radius:2px 2px 0 0}
+  .bar-col.peak .bar{background:var(--accent-2);border-color:var(--accent-2)}
+  .bar-col .lab{font-size:.66rem;color:var(--muted);font-variant-numeric:tabular-nums}
+  .axis{display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:.68rem;color:var(--muted)}
+
+  /* meter rows (feedback) */
+  .mrows{display:flex;flex-direction:column;gap:2px}
+  .mrow{padding:13px 0;border-bottom:1px solid var(--line)}
+  .mrow:last-child{border-bottom:0;padding-bottom:0}
+  .mrow-top{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}
+  .mrow-top b{font-size:.81rem;font-weight:500}
+  .mrow-top .sc{margin-left:auto;font-size:.85rem;font-weight:600;font-variant-numeric:tabular-nums}
+  .mrow-top .dl{font-size:.7rem;font-variant-numeric:tabular-nums}
+  .track{height:5px;border-radius:3px;background:var(--surface-3);border:1px solid var(--line);overflow:hidden}
+  .track i{display:block;height:100%;background:var(--accent);width:0;transition:width 1s cubic-bezier(.2,.8,.2,1)}
+  .mrow.warn .track i{background:var(--warn)}
+  .mrow.poor .track i{background:var(--danger)}
+  .mrow-top .dl.up{color:var(--accent-ink)}
+  .mrow-top .dl.dn{color:var(--danger-ink)}
+
+  /* KPI strip */
+  .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px}
+  .kpi{padding:18px 20px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+  .kpi:nth-child(1){background:rgba(58,134,255,.11);border-color:var(--accent-bd)}
+  .kpi:nth-child(2){background:rgba(189,178,255,.20);border-color:var(--ok-bd)}
+  .kpi:nth-child(3){background:rgba(255,214,224,.34);border-color:var(--warn-bd)}
+  .kpi:nth-child(4){background:var(--c-mist);border-color:var(--line-2)}
+  .kpi .k{font-size:.635rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .kpi .v{margin-top:9px;font-size:1.72rem;font-weight:600;letter-spacing:-.035em;line-height:1.1;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:5px}
+  .kpi .v small{font-size:.75rem;font-weight:500;color:var(--muted);letter-spacing:0}
+  .kpi .d{margin-top:7px;font-size:.72rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+  .kpi .d b{font-weight:500;font-variant-numeric:tabular-nums}
+  .d-up{color:var(--accent-ink)}
+  .d-dn{color:var(--danger-ink)}
+
+  /* heatmap */
+  .hm{display:grid;gap:3px;min-width:680px;padding:20px}
+  .hm-h{font-size:.65rem;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+  .hm-r{display:flex;align-items:center;font-size:.74rem;color:var(--txt-2);white-space:nowrap;padding-right:4px}
+  .hm-cell{height:30px;border-radius:2px;border:1px solid rgba(88,84,120,.12);transition:background .8s linear}
+  .legend{display:flex;align-items:center;gap:10px;padding:0 20px 18px;font-size:.71rem;color:var(--muted)}
+  .legend-ramp{display:flex;gap:2px}
+  .legend-ramp i{width:26px;height:8px;border-radius:1px}
+
+  /* tracker */
+  .trk-head{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap}
+  .trk-box{flex:1;min-width:190px;padding:16px 18px;background:var(--inset);border:1px solid var(--line-2);border-radius:var(--r-sm)}
+  .trk-box .k{font-size:.635rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .trk-box .v{margin-top:7px;font-size:1.6rem;font-weight:600;letter-spacing:-.03em;font-family:'JetBrains Mono',monospace;line-height:1.1}
+  .trk-box.mine .v{color:var(--accent-ink)}
+  .trk-bar{height:6px;border-radius:3px;background:var(--surface-3);border:1px solid var(--line);overflow:hidden;margin:18px 0 0}
+  .trk-bar i{display:block;height:100%;background:var(--accent);transition:width .6s ease}
+  .trk-steps{display:flex;align-items:center;justify-content:space-between;margin-top:9px;font-size:.68rem;color:var(--muted);font-variant-numeric:tabular-nums}
+  .trk-list{display:flex;flex-direction:column;gap:0;margin-top:20px;border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden}
+  .trk-step{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);background:var(--inset);font-size:.8rem}
+  .trk-step:last-child{border-bottom:0}
+  .trk-step .n{width:18px;height:18px;border-radius:var(--r-xs);display:grid;place-items:center;flex:none;background:var(--surface-3);border:1px solid var(--line-2);font-size:.62rem;color:var(--muted)}
+  .trk-step .t{color:var(--muted)}
+  .trk-step.done .n{background:var(--ok);border-color:var(--ok-bd);color:var(--ok-ink)}
+  .trk-step.now{background:var(--surface-2)}
+  .trk-step.now .t{color:var(--txt)}
+  .trk-step .when{margin-left:auto;font-size:.7rem;color:var(--muted);font-variant-numeric:tabular-nums}
+
+  /* abha record */
+  .rec-card{margin-top:16px;border:1px solid var(--line-2);border-radius:var(--r-sm);overflow:hidden}
+  .rec-top{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+  .rec-top b{font-size:.87rem;font-weight:600}
+  .rec-top .id{margin-left:auto;font-size:.72rem;color:var(--muted);font-family:'JetBrains Mono',monospace}
+  .rec-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line)}
+  .rec-grid div{background:var(--inset);padding:12px 16px}
+  .rec-grid .k{font-size:.635rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+  .rec-grid .v{margin-top:3px;font-size:.81rem}
+  .scan-hint{margin-top:16px;padding:26px 18px;border:1px dashed var(--line-2);border-radius:var(--r-sm);text-align:center;color:var(--muted);font-size:.8rem;background:var(--inset)}
+  .scan-hint svg{width:22px;height:22px;margin:0 auto 10px;fill:none;stroke:var(--muted);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+  .spin{width:14px;height:14px;border:2px solid rgba(88,84,120,.22);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  /* queue board strip */
+  .board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface)}
+  .board div{padding:15px 18px;border-right:1px solid var(--line);background:var(--surface)}
+  .board div:nth-child(1){background:rgba(58,134,255,.11)}
+  .board div:nth-child(2){background:rgba(189,178,255,.20)}
+  .board div:nth-child(3){background:rgba(255,214,224,.34)}
+  .board div:nth-child(4){background:var(--c-mist)}
+  .board div:last-child{border-right:0}
+  .board .k{font-size:.635rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .board .v{margin-top:6px;font-size:1.15rem;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .board .v small{font-size:.68rem;font-weight:500;color:var(--muted);letter-spacing:0}
+
+  /* toolbar */
+  .toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto}
+  .filter-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:13px 20px;border-bottom:1px solid var(--line);background:var(--inset)}
+  .filter-bar .input{width:auto;min-width:150px;height:30px;font-size:.79rem}
+  .count-note{font-size:.72rem;color:var(--muted);font-variant-numeric:tabular-nums}
+  .count-note b{color:var(--txt-2);font-weight:500}
+
+  /* toasts */
+  .toast-host{position:fixed;right:20px;bottom:20px;z-index:200;display:flex;flex-direction:column;gap:10px;width:310px}
+  .toast{
+    display:flex;align-items:flex-start;gap:10px;padding:12px 13px;
+    background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-sm);
+    box-shadow:var(--shadow);
+  }
+  .toast.out{animation:toastOut .25s ease forwards}
+  @keyframes toastOut{to{opacity:0;transform:translateX(12px)}}
+  .toast .bar{width:3px;align-self:stretch;border-radius:2px;background:var(--accent);flex:none}
+  .toast[data-kind="ok"] .bar{background:var(--ok-ink)}
+  .toast[data-kind="warn"] .bar{background:var(--warn-ink)}
+  .toast[data-kind="danger"] .bar{background:var(--danger-ink)}
+  .toast b{display:block;font-size:.79rem;font-weight:500}
+  .toast span{display:block;font-size:.73rem;color:var(--muted);margin-top:2px}
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width:1240px){
+    .ai-grid,.staff-grid{grid-template-columns:minmax(0,1fr)}
+    .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+  @media (max-width:1024px){
+    .split-2{grid-template-columns:minmax(0,1fr)}
+    .board{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .board div:nth-child(2n){border-right:0}
+    .board div:nth-child(-n+2){border-bottom:1px solid var(--line)}
+    .app{grid-template-columns:1fr}
+    .sidebar{position:fixed;left:0;top:0;width:var(--sidebar);z-index:60;transform:translateX(-100%);transition:transform .2s ease}
+    .sidebar.open{transform:none}
+    .menu-btn{display:grid}
+    .content{padding:20px 20px 56px}
+    .verdict{grid-template-columns:1fr 1fr}
+  }
+  @media (max-width:720px){
+    .search{display:none}
+    .kpis{grid-template-columns:1fr;gap:14px}
+    .board{grid-template-columns:1fr}
+    .board div{border-right:0;border-bottom:1px solid var(--line)}
+    .board div:last-child{border-bottom:0}
+    .verdict{grid-template-columns:1fr}
+    .form-grid,.rec-grid{grid-template-columns:1fr}
+    .view-actions{margin-left:0;width:100%}
+    .toast-host{left:16px;right:16px;width:auto}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none !important;transition:none !important}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== ICON SPRITE ===== -->
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="10" y="10" width="4" height="4" rx="1"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M16 5.5a3 3 0 0 1 0 5.6M18 20c0-2.2-.6-3.9-1.7-5"/></symbol>
+  <symbol id="i-stetho" viewBox="0 0 24 24"><path d="M6 3v5a4 4 0 0 0 8 0V3"/><path d="M6 3H4.5M14 3h1.5"/><path d="M10 12v3a4.5 4.5 0 0 0 9 0v-2.5"/><circle cx="19" cy="9" r="2"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4 2.6 20h18.8L12 4Z"/><path d="M12 10v4M12 17h.01"/></symbol>
+  <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="m15 15 6 6"/><path d="M4 4l5 5"/></symbol>
+  <symbol id="i-trend" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></symbol>
+  <symbol id="i-ticket" viewBox="0 0 24 24"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8Z"/><path d="M13 6v12" stroke-dasharray="2 3"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+  <symbol id="i-id" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.7-1.6 1.8-2.4 3-2.4s2.3.8 3 2.4M15 10h4M15 13h3"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 15V10a6 6 0 1 0-12 0v5l-1.5 2.5h15L18 15Z"/><path d="M10 20a2 2 0 0 0 4 0"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9L12 3Z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></symbol>
+  <symbol id="i-qr" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM19 19h2v2h-2z"/></symbol>
+  <symbol id="i-bell-off" viewBox="0 0 24 24"><path d="M9 4a6 6 0 0 1 6 6v5M18 15v-1M6.5 8v5L5 15.5h11"/><path d="M10 20a2 2 0 0 0 4 0M3 3l18 18"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M4 5c0-1 1-2 2-2h2l2 5-2 1a12 12 0 0 0 5 5l1-2 5 2v2c0 1-1 2-2 2A15 15 0 0 1 4 5Z"/></symbol>
+  <symbol id="i-db" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></symbol>
+  <symbol id="i-x-mark" viewBox="0 0 24 24"><path d="M12 4 2.6 20h18.8L12 4Z"/></symbol>
+</svg>
+
+<a class="skip" href="#main">Skip to main content</a>
+
+<div class="app">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">AI</span>
+      <span class="brand-txt">
+        <b>AI-ORCHESTRA</b>
+        <span>Operations Console</span>
+      </span>
+    </div>
+
+    <div class="side-body">
+      <div class="side-group">
+        <div class="side-label" id="facilityLbl">Facility</div>
+        <select class="side-select" id="facility" aria-labelledby="facilityLbl">
+          <option>Sunrise General Hospital</option>
+          <option>Sunrise — Annexe Block</option>
+          <option>Sunrise — Day-Care Centre</option>
+        </select>
+        <nav class="side-nav" id="sideNav" aria-label="Modules">
+          <button class="side-item" type="button" data-route="ai">
+            <svg aria-hidden="true"><use href="#i-cpu"/></svg><span class="lbl">AI Engine &amp; Decision Core</span><span class="key" aria-hidden="true">01</span>
+          </button>
+          <button class="side-item" type="button" data-route="patients">
+            <svg aria-hidden="true"><use href="#i-users"/></svg><span class="lbl">Patient Services</span><span class="key" aria-hidden="true">02</span>
+          </button>
+          <button class="side-item" type="button" data-route="staff">
+            <svg aria-hidden="true"><use href="#i-stetho"/></svg><span class="lbl">Staff &amp; Doctor Mgmt</span><span class="key" aria-hidden="true">03</span>
+          </button>
+          <button class="side-item" type="button" data-route="admin">
+            <svg aria-hidden="true"><use href="#i-chart"/></svg><span class="lbl">System Admin &amp; Analytics</span><span class="key" aria-hidden="true">04</span>
+          </button>
+        </nav>
+        <p class="data-note">
+          <span class="pill pill-neutral pill-xs">Demo</span>
+          Synthetic sample data only — no real patient records.
+        </p>
+      </div>
+    </div>
+
+    <div class="side-foot">
+      <div class="user">
+        <span class="avatar" aria-hidden="true">MR</span>
+        <span>
+          <b>Dr. Meera Rao</b>
+          <span>Cardiology · Administrator</span>
+        </span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main" id="main">
+    <!-- ===== TOPBAR ===== -->
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menuBtn" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="sidebar" title="Toggle navigation"><svg aria-hidden="true"><use href="#i-menu"/></svg></button>
+      <div class="crumbs">
+        <span>Sunrise General</span><span class="sep" aria-hidden="true">/</span><b id="crumb">AI Engine</b>
+      </div>
+      <div class="search">
+        <svg aria-hidden="true"><use href="#i-search"/></svg>
+        <input type="search" id="globalSearch" placeholder="Search token, patient, ABHA ID…" aria-label="Search tokens, patients and ABHA IDs" autocomplete="off" />
+      </div>
+      <span class="pill pill-ok pill-xs" title="All hospital systems are reachable"><span class="dot" aria-hidden="true"></span>Operational</span>
+      <div class="tb-div" aria-hidden="true"></div>
+      <span class="tb-time num" id="clock">—</span>
+      <button class="icon-btn" id="notifBtn" type="button" aria-label="Notifications, 3 unread" title="Notifications">
+        <svg aria-hidden="true"><use href="#i-bell"/></svg><span class="count num" aria-hidden="true">3</span>
+      </button>
+    </header>
+
+    <div class="content">
+      <div class="content-inner">
+
+        <!-- ============================================================
+             MODULE 01 — AI ENGINE & SMART DECISION CORE
+             ============================================================ -->
+        <section class="view is-active" id="view-ai" aria-labelledby="h-ai">
+          <div class="view-head">
+            <div>
+              <div class="eyebrow">Module 01 — AI Engine &amp; Smart Decision Core</div>
+              <h1 id="h-ai">Predictive queue orchestration</h1>
+              <p class="view-sub">Five production models score every arrival, rebalance queues in real time, and open counters before congestion peaks. All decisions are logged against the token for audit.</p>
+            </div>
+            <div class="view-actions">
+              <span class="pill pill-ok"><span class="dot"></span>Engine online</span>
+              <span class="pill pill-neutral">Last cycle <span class="num" id="lastCycle">14:32:04</span></span>
+              <button class="btn btn-primary" id="runCycle"><svg><use href="#i-bolt"/></svg>Run inference cycle</button>
+            </div>
+          </div>
+
+          <div class="board">
+            <div><div class="k">Tokens in system</div><div class="v num" id="boardTokens">128</div></div>
+            <div><div class="k">Now serving</div><div class="v" id="boardServing">A-111</div></div>
+            <div><div class="k">Median wait</div><div class="v num">18 <small>min</small></div></div>
+            <div><div class="k">Escalations today</div><div class="v num" id="boardEsc">6</div></div>
+          </div>
+
+          <div class="ai-grid">
+            <!-- Predictor + triage -->
+            <section class="panel panel-pad">
+              <div class="panel-head">
+                <span class="panel-title"><svg><use href="#i-clock"/></svg>Wait-Time Predictor &amp; Severity Analyzer</span>
+                <span class="panel-note">Re-scores on every input change</span>
+              </div>
+
+              <div class="form-grid">
+                <div class="field">
+                  <label for="dept">Department</label>
+                  <select class="input" id="dept">
+                    <option value="cardio">Cardiology</option>
+                    <option value="ortho">Orthopaedics</option>
+                    <option value="genmed" selected>General Medicine</option>
+                    <option value="peds">Paediatrics</option>
+                    <option value="radio">Radiology</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="visit">Visit type</label>
+                  <select class="input" id="visit">
+                    <option value="new" selected>New consultation</option>
+                    <option value="follow">Follow-up</option>
+                    <option value="emerg">Emergency / walk-in</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="age">Patient age <span class="val num" id="ageOut">34 yrs</span></label>
+                  <input type="range" id="age" min="1" max="95" value="34" />
+                </div>
+                <div class="field">
+                  <label for="sev">Symptom severity <span class="val num" id="sevOut">4 / 10</span></label>
+                  <input type="range" id="sev" min="1" max="10" value="4" />
+                </div>
+              </div>
+
+              <div class="verdict" id="verdict" data-tone="routine">
+                <div class="v-cell">
+                  <div class="k">Predicted wait</div>
+                  <div class="v num" id="waitVal">18<small>min</small></div>
+                  <div class="m">Confidence <span class="num" id="confVal">92</span>%</div>
+                </div>
+                <div class="v-cell">
+                  <div class="k">Priority score</div>
+                  <div class="v num" id="scoreVal">41<small>/ 100</small></div>
+                  <div class="m">Severity + age + visit type</div>
+                </div>
+                <div class="v-cell">
+                  <div class="k">Triage outcome</div>
+                  <div class="v" style="font-size:1.16rem;padding-top:4px"><span class="pill" id="prioBadge">Routine</span></div>
+                  <div class="m">Lane <span id="laneVal">Standard A</span></div>
+                </div>
+                <div class="span-2" style="grid-column:1/-1">
+                  <div class="meter"><i id="meterFill" style="width:40%"></i></div>
+                  <div class="v-note">
+                    <svg><use href="#i-check"/></svg>
+                    <span id="recText">Standard queue. Patient will receive an SMS alert 3 slots before their turn.</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Model registry -->
+            <section class="panel">
+              <div class="panel-head">
+                <span class="panel-title"><svg><use href="#i-cpu"/></svg>Model registry</span>
+                <span class="panel-note">5 active</span>
+              </div>
+              <ul class="rows" id="modelList"></ul>
+            </section>
+          </div>
+
+          <!-- Queue optimizer -->
+          <section class="panel">
+            <div class="panel-head">
+              <span class="panel-title"><svg><use href="#i-shuffle"/></svg>Dynamic Queue Optimizer</span>
+              <div class="toolbar">
+                <button class="btn btn-sm" data-act="emergency"><svg><use href="#i-alert"/></svg>Emergency arrives</button>
+                <button class="btn btn-sm" data-act="cancel"><svg><use href="#i-x"/></svg>Cancellation</button>
+                <button class="btn btn-sm" data-act="early"><svg><use href="#i-trend"/></svg>Early consult</button>
+                <button class="btn btn-sm" data-act="delay"><svg><use href="#i-clock"/></svg>Doctor delay +10m</button>
+                <button class="btn btn-sm btn-quiet" data-act="reset"><svg><use href="#i-refresh"/></svg>Reset</button>
+              </div>
+            </div>
+            <div class="table-wrap" style="max-height:396px">
+              <table class="tbl">
+                <thead>
+                  <tr>
+                    <th style="width:44px">#</th>
+                    <th style="width:104px">Token</th>
+                    <th>Patient</th>
+                    <th style="width:120px">Visit</th>
+                    <th class="r" style="width:96px">Est. wait</th>
+                    <th style="width:112px">Priority</th>
+                    <th style="width:96px">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="qList"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <div class="split-2">
+            <!-- Forecaster -->
+            <section class="panel panel-pad">
+              <div class="panel-head">
+                <span class="panel-title"><svg><use href="#i-trend"/></svg>Crowd &amp; Demand Forecaster</span>
+                <span class="panel-note">Projected arrivals · next 9 hours</span>
+              </div>
+              <div class="bars" id="forecastBars"></div>
+              <div class="axis">
+                <span>Peak window <b class="num" style="color:var(--txt-2)">15:00 – 16:00</b></span>
+                <span>Baseline <b class="num" style="color:var(--txt-2)">41 / hr</b></span>
+              </div>
+            </section>
+
+            <!-- Allocator -->
+            <section class="panel">
+              <div class="panel-head">
+                <span class="panel-title"><svg><use href="#i-users"/></svg>Smart Resource Allocator</span>
+                <button class="btn btn-sm" id="spikeBtn" style="margin-left:auto"><svg><use href="#i-bolt"/></svg>Simulate congestion spike</button>
+              </div>
+              <ul class="rows" id="allocList"></ul>
+            </section>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             MODULE 02 — PATIENT & CITIZEN SERVICES
+             ============================================================ -->
+        <section class="view" id="view-patients" aria-labelledby="h-patients">
+          <div class="view-head">
+            <div>
+              <div class="eyebrow">Module 02 — Patient &amp; Citizen Services</div>
+              <h1 id="h-patients">Token to turn, without the guesswork</h1>
+              <p class="view-sub">Issue advance or walk-in tokens on any channel, let patients follow the live queue from their phone, and check in with a single tap using ABHA / ABDM health IDs.</p>
+            </div>
+            <div class="view-actions">
+              <span class="pill pill-ok"><span class="dot"></span>4 channels live</span>
+              <button class="btn btn-primary" id="abhaJump"><svg><use href="#i-qr"/></svg>ABHA check-in</button>
+            </div>
+          </div>
+
+          <div class="board">
+            <div><div class="k">Issued today</div><div class="v num" id="ptIssued">412</div></div>
+            <div><div class="k">Avg. tokens / patient</div><div class="v num">1.0</div></div>
+            <div><div class="k">Alerts delivered</div><div class="v num" id="ptAlerts">388</div></div>
+            <div><div class="k">No-show rate</div><div class="v num">3.4 <small>%</small></div></div>
+          </div>
+
+          <div class="ai-grid">
+            <!-- Token generation -->
+            <section class="panel panel-pad">
+              <div class="panel-head">
+                <span class="panel-title"><svg><use href="#i-ticket"/></svg>Digital Token Generation</span>
+                <span class="panel-note">Issues instantly to all channels</span>
+              </div>
+
+              <div class="field">
+                <label>Issuance channel</label>
+                <div class="seg" id="channelSeg" role="group" aria-label="Issuance channel">
+                  <button class="seg-opt" aria-pressed="true" data-ch="App">App</button>
+                  <button class="seg-opt" aria-pressed="false" data-ch="Web">Web</button>
+                  <button class="seg-opt" aria-pressed="false" data-ch="Kiosk">Kiosk</button>
+                  <button class="seg-opt" aria-pressed="false" data-ch="QR scan">QR scan</button>
+                  <button class="seg-opt" aria-pressed="false" data-ch="Walk-in">Walk-in</button>
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="field">
+                  <label for="ptName">Patient name</label>
+                  <input class="input" id="ptName" value="Ananya Sharma" autocomplete="off" />
+                </div>
+                <div class="field">
+                  <label for="ptPhone">Mobile (for alerts)</label>
+                  <input class="input" id="ptPhone" value="+91 98••• ••412" autocomplete="off" />
+                </div>
+                <div class="field">
+                  <label for="ptDept">Department</label>
+                  <select class="input" id="ptDept">
+                    <option>Cardiology</option>
+                    <option selected>General Medicine</option>
+                    <option>Orthopaedics</option>
+                    <option>Paediatrics</option>
+                    <option>Radiology</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="ptVisit">Visit type</label>
+                  <select class="input" id="ptVisit">
+                    <option>New consultation</option>
+                    <option selected>Follow-up</option>
+                    <option>Emergency</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="verdict" data-tone="routine" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-top:4px">
+                <div class="v-cell">
+                  <div class="k">Next token</div>
+                  <div class="v mono" id="nextToken">A-119</div>
+                  <div class="m">Queue: <span id="queueName">General Medicine</span></div>
+                </div>
+                <div class="v-cell">
+                  <div class="k">Projected turn</div>
+                  <div class="v num" id="turnEta">~26 <small>min</small></div>
+                  <div class="m">Alerts at 3, 2 and 1 slot before</div>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap">
+                <button class="btn btn-primary" id="issueBtn"><svg><use href="#i-plus"/></svg>Issue token</button>
+                <button class="btn" id="issueWalkBtn"><svg><use href="#i-phone"/></svg>Send to walk-in list</button>
+              </div>
+            </section>
+
+            <!-- Tracker -->
+            <section class="panel panel-pad">
+              <div class="panel-head">
+                <span class="panel-title"><svg><use href="#i-pin"/></svg>Live Queue Tracker</span>
+                <span class="panel-note">Auto-refreshing</span>
+              </div>
+              <div class="trk-head">
+                <div class="trk-box">
+                  <div class="k">Now serving</div>
+                  <div class="v" id="tkNow">A-111</div>
+                </div>
+                <div class="trk-box mine">
+                  <div class="k">Your token</div>
+                  <div class="v" id="tkMine">A-118</div>
+                </div>
+              </div>
+              <div class="trk-bar"><i id="tkBar" style="width:12%"></i></div>
+              <div class="trk-steps">
+                <span class="num" id="tkAhead">7 patients ahead</span>
+                <span>ETA <b class="num" id="tkEta">~28 min</b></span>
+              </div>
+              <div class="trk-list" id="tkSteps"></div>
+            </section>
+          </div>
+
+          <section class="panel">
+            <div class="panel-head">
+              <span class="panel-title"><svg><use href="#i-ticket"/></svg>Recently issued tokens</span>
+              <span class="panel-note">Newest first</span>
+            </div>
+            <div class="table-wrap" style="max-height:330px">
+              <table class="tbl">
+                <thead>
+                  <tr>
+                    <th style="width:104px">Token</th>
+                    <th>Patient</th>
+                    <th style="width:104px">Channel</th>
+                    <th style="width:150px">Department</th>
+                    <th style="width:130px">Visit type</th>
+                    <th class="r" style="width:96px">Est. wait</th>
+                    <th style="width:110px">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="tokenList"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <div class="split-2">
+            <!-- ABHA -->
+            <section class="panel panel-pad">
+              <div class="panel-head">
+                <span class="panel-title"><svg><use href="#i-id"/></svg>ABHA / ABDM Integration</span>
+                <span class="panel-note">Scan &amp; Share health ID</span>
+              </div>
+              <p style="font-size:.81rem;color:var(--txt-2);margin-bottom:16px">One-tap check-in pulls demographics, past visits and allergies straight from the ABDM sandbox — no forms, no re-typing.</p>
+              <button class="btn btn-primary" id="abhaBtn"><svg><use href="#i-qr"/></svg>Scan &amp; Share</button>
+              <div id="abhaOut"></div>
+            </section>
+
+            <!-- Alerts -->
+            <section class="panel">
+              <div class="panel-head">
+                <span class="panel-title"><svg><use href="#i-bell"/></svg>Automated Alerts</span>
+                <span class="panel-note">3–5 slots before the turn</span>
+              </div>
+              <div class="table-wrap" style="max-height:340px">
+                <table class="tbl">
+                  <thead>
+                    <tr>
+                      <th style="width:84px">Time</th>
+                      <th style="width:100px">Token</th>
+                      <th style="width:92px">Channel</th>
+                      <th>Trigger</th>
+                      <th class="r" style="width:104px">Slots before</th>
+                      <th style="width:104px">Delivery</th>
+                    </tr>
+                  </thead>
+                  <tbody id="alertList"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             MODULE 03 — HOSPITAL STAFF & DOCTOR MANAGEMENT
+             ============================================================ -->
+        <section class="view" id="view-staff" aria-labelledby="h-staff">
+          <div class="view-head">
+            <div>
+              <div class="eyebrow">Module 03 — Hospital Staff &amp; Doctor Management</div>
+              <h1 id="h-staff">Floor tools for doctors and reception</h1>
+              <p class="view-sub">Doctors drive their own call flow, reception manages walk-ins and manual tokens, and the queue stays in two-way sync with HIMS / EHR record systems.</p>
+            </div>
+            <div class="view-actions">
+              <span class="pill pill-warn"><span class="dot"></span>2 counters at capacity</span>
+              <button class="btn btn-primary" id="callNext"><svg><use href="#i-stetho"/></svg>Call next patient</button>
+            </div>
+          </div>
+
+          <div class="staff-grid">
+            <!-- Doctor console -->
+            <section class="panel">
+              <div class="panel-head">
+                <span class="panel-title"><svg><use href="#i-stetho"/></svg>Doctor Console — Dr. Meera Rao</span>
+                <span class="pill pill-info">Room 204 · Cardiology</span>
+                <span class="panel-note">Shift 09:00 – 13:00 · <span class="num">12</span> slots</span>
+                <div class="toolbar">
+                  <button class="btn btn-sm" id="logDelay"><svg><use href="#i-clock"/></svg>Log +10 min delay</button>
+                  <button class="btn btn-sm" id="noShow"><svg><use href="#i-x"/></svg>Mark no-show</button>
+                  <button class="btn btn-sm" id="completeVisit"><svg><use href="#i-check"/></svg>Complete consult</button>
+                </div>
+              </div>
+              <div class="table-wrap" style="max-height:420px">
+                <table class="tbl">
+                  <thead>
+                    <tr>
+                      <th style="width:44px">#</th>
+                      <th style="width:100px">Token</th>
+                      <th>Patient</th>
+                      <th style="width:120px">Visit</th>
+                      <th class="r" style="width:112px">Waiting</th>
+                      <th style="width:120px">Status</th>
+                      <th class="r" style="width:84px"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="docList"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <div class="stack">
+              <!-- Reception -->
+              <section class="panel">
+                <div class="panel-head">
+                  <span class="panel-title"><svg><use href="#i-monitor"/></svg>Reception &amp; Kiosk Hub</span>
+                  <span class="panel-note">Counter 2</span>
+                </div>
+                <div class="table-wrap">
+                  <table class="tbl">
+                    <thead>
+                      <tr>
+                        <th>Walk-in</th>
+                        <th style="width:130px">Reason</th>
+                        <th class="r" style="width:120px">Waiting</th>
+                        <th class="r" style="width:96px"></th>
+                      </tr>
+                    </thead>
+                    <tbody id="walkinList"></tbody>
+                  </table>
+                </div>
+                <div style="padding:14px 16px;border-top:1px solid var(--line)">
+                  <button class="btn btn-sm" id="addWalkin"><svg><use href="#i-plus"/></svg>Add walk-in</button>
+                </div>
+              </section>
+
+              <!-- EHR -->
+              <section class="panel">
+                <div class="panel-head">
+                  <span class="panel-title"><svg><use href="#i-link"/></svg>HIMS / EHR Integration</span>
+                  <span class="panel-note">Two-way</span>
+                </div>
+                <div class="table-wrap">
+                  <table class="tbl">
+                    <thead>
+                      <tr>
+                        <th>System</th>
+                        <th style="width:96px">Direction</th>
+                        <th class="r" style="width:100px">Last sync</th>
+                        <th class="r" style="width:88px">Records</th>
+                        <th style="width:96px">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="ehrList"></tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             MODULE 04 — SYSTEM ADMIN & ANALYTICS
+             ============================================================ -->
+        <section class="view" id="view-admin" aria-labelledby="h-admin">
+          <div class="view-head">
+            <div>
+              <div class="eyebrow">Module 04 — System Admin &amp; Analytics</div>
+              <h1 id="h-admin">Congestion and feedback, hour by hour</h1>
+              <p class="view-sub">Live departmental heatmaps and post-visit feedback turn day-to-day operations into decisions you can act on before the next OPD rush.</p>
+            </div>
+            <div class="view-actions">
+              <span class="pill pill-neutral">Window <span class="num">09:00 – 17:00</span></span>
+              <button class="btn" id="exportBtn"><svg><use href="#i-db"/></svg>Export report</button>
+            </div>
+          </div>
+
+          <div class="kpis">
+            <div class="kpi">
+              <div class="k">Avg. wait time</div>
+              <div class="v num">18 <small>min</small></div>
+              <div class="d"><b class="d-dn">▼ 42%</b> vs. pre-AI-ORCHESTRA baseline</div>
+            </div>
+            <div class="kpi">
+              <div class="k">Patients served</div>
+              <div class="v num">386</div>
+              <div class="d"><b class="d-up">▲ 11%</b> throughput today</div>
+            </div>
+            <div class="kpi">
+              <div class="k">Satisfaction</div>
+              <div class="v num">4.4 <small>/ 5</small></div>
+              <div class="d"><b class="num">1,284</b> responses this month</div>
+            </div>
+            <div class="kpi">
+              <div class="k">Counters auto-opened</div>
+              <div class="v num">3</div>
+              <div class="d"><b class="num">+2</b> staff shifts triggered by forecast</div>
+            </div>
+          </div>
+
+          <section class="panel">
+            <div class="panel-head">
+              <span class="panel-title"><svg><use href="#i-grid"/></svg>Real-Time Room Monitoring</span>
+              <span class="pill pill-ok"><span class="dot"></span>Live · refreshes every 4s</span>
+              <span class="panel-note" id="hmPeak">Peak: Orthopaedics · 15:00</span>
+            </div>
+            <div class="table-wrap">
+              <div class="hm" id="hmGrid"></div>
+            </div>
+            <div class="legend">
+              <span>Low load</span>
+              <span class="legend-ramp" id="hmLegend"></span>
+              <span>High load</span>
+              <span style="margin-left:auto">Congestion index · <span class="num">0 – 100</span></span>
+            </div>
+          </section>
+
+          <div class="split-2">
+            <!-- Feedback -->
+            <section class="panel panel-pad">
+              <div class="panel-head">
+                <span class="panel-title"><svg><use href="#i-star"/></svg>Feedback &amp; Bottleneck Mining</span>
+                <span class="panel-note">Post-visit ratings · rolling 30 days</span>
+              </div>
+              <div style="display:flex;align-items:flex-end;gap:14px;padding:16px 18px;background:var(--inset);border:1px solid var(--line-2);border-radius:var(--r-sm);margin-bottom:22px">
+                <div class="num" style="font-size:2.1rem;font-weight:600;letter-spacing:-.04em;line-height:1">4.4</div>
+                <div style="padding-bottom:2px">
+                  <div style="display:flex;gap:2px;color:var(--accent)">
+                    <svg width="14" height="14" fill="currentColor"><use href="#i-star"/></svg>
+                    <svg width="14" height="14" fill="currentColor"><use href="#i-star"/></svg>
+                    <svg width="14" height="14" fill="currentColor"><use href="#i-star"/></svg>
+                    <svg width="14" height="14" fill="currentColor"><use href="#i-star"/></svg>
+                    <svg width="14" height="14" fill="currentColor"><use href="#i-star" opacity=".35"/></svg>
+                  </div>
+                  <div style="font-size:.74rem;color:var(--muted);margin-top:4px">Average of <span class="num">1,284</span> responses</div>
+                </div>
+                <div style="margin-left:auto;display:flex;gap:6px">
+                  <span class="pill pill-ok pill-xs">+0.2 MoM</span>
+                </div>
+              </div>
+              <div class="mrows" id="fbRows"></div>
+            </section>
+
+            <!-- Bottlenecks -->
+            <section class="panel">
+              <div class="panel-head">
+                <span class="panel-title"><svg><use href="#i-alert"/></svg>Identified bottlenecks</span>
+                <span class="panel-note">Ranked by affected patients</span>
+              </div>
+              <ul class="rows" id="bnList"></ul>
+              <div style="padding:14px 20px;border-top:1px solid var(--line);font-size:.75rem;color:var(--muted)">
+                Feedback is mapped to operational events (counter, department, hour) to surface recurring weak points.
+              </div>
+            </section>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast-host" id="toastHost" aria-live="polite"></div>
+
+<script>
+/* ============================================================
+   0. HELPERS
+   ============================================================ */
+const $  = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+
+/* cross-module hooks (assigned by their owning module) */
+let addWalkin = function(){};
+let pushAlert = function(){};
+const pad = n => String(n).padStart(2, '0');
+const clockStr = d => pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+
+const ROUTES = {
+  ai:       { crumb:'AI Engine',           view:'view-ai' },
+  patients: { crumb:'Patient Services',    view:'view-patients' },
+  staff:    { crumb:'Staff & Doctors',     view:'view-staff' },
+  admin:    { crumb:'Admin & Analytics',   view:'view-admin' }
+};
+
+function toast(title, body, kind){
+  const host = $('#toastHost');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.dataset.kind = kind || 'info';
+  el.innerHTML = '<span class="bar"></span><span><b>' + esc(title) + '</b><span>' + esc(body || '') + '</span></span>';
+  host.appendChild(el);
+  setTimeout(()=>{ el.classList.add('out'); setTimeout(()=>el.remove(), 260); }, 4200);
+}
+
+/* ============================================================
+   1. ROUTER
+   ============================================================ */
+(function router(){
+  function show(key){
+    const r = ROUTES[key] || ROUTES.ai;
+    $$('.view').forEach(v => v.classList.toggle('is-active', v.id === r.view));
+    $$('.side-item').forEach(b => {
+      if(b.dataset.route === key) b.setAttribute('aria-current','page');
+      else b.removeAttribute('aria-current');
+    });
+    $('#crumb').textContent = r.crumb;
+    $('#sidebar').classList.remove('open');
+    window.scrollTo({ top:0, behavior:'instant' in document.documentElement.style ? 'instant' : 'auto' });
+  }
+  $('#sideNav').addEventListener('click', e => {
+    const btn = e.target.closest('.side-item');
+    if(!btn) return;
+    location.hash = '#/' + btn.dataset.route;
+  });
+  $('#menuBtn').addEventListener('click', ()=> $('#sidebar').classList.toggle('open'));
+  window.addEventListener('hashchange', ()=> show((location.hash.split('/')[1] || 'ai')));
+  show((location.hash.split('/')[1] || 'ai'));
+})();
+
+/* ============================================================
+   2. TOPBAR CLOCK
+   ============================================================ */
+(function tick(){
+  const el = $('#clock');
+  const paint = ()=>{ el.textContent = clockStr(new Date()) + ' IST'; };
+  paint();
+  setInterval(paint, 1000);
+})();
+
+/* ============================================================
+   3. MODEL REGISTRY
+   ============================================================ */
+(function models(){
+  const list = $('#modelList');
+  const data = [
+    { n:'Wait-Time Predictor',        d:'Gradient-boosted · 5 features',   s:'ok',   v:'94.2', u:'MAE ±2.1 min', i:'#i-clock' },
+    { n:'Severity & Priority Analyzer',d:'Rules + scoring · 22 signals',    s:'ok',   v:'97.6', u:'AUC 0.976',    i:'#i-alert' },
+    { n:'Dynamic Queue Optimizer',    d:'Constraint solver · live',        s:'ok',   v:'1.8',  u:'s per event',  i:'#i-shuffle' },
+    { n:'Crowd & Demand Forecaster',  d:'Time-series · 12 months',        s:'ok',   v:'11.4', u:'WAPE',          i:'#i-trend' },
+    { n:'Smart Resource Allocator',   d:'Rules engine · thresholds',       s:'warn', v:'72.0', u:'2 counters',    i:'#i-users' }
+  ];
+  const pill = { ok:'pill-ok', warn:'pill-warn', danger:'pill-danger' };
+  const txt  = { ok:'Serving', warn:'Throttled', danger:'Down' };
+  list.innerHTML = data.map(m => (
+    '<li>' +
+      '<span class="row-ic"><svg><use href="' + m.i + '"/></svg></span>' +
+      '<span class="row-txt"><b>' + m.n + '</b><span>' + m.d + '</span></span>' +
+      '<span class="row-val"><b class="num">' + m.v + '</b><span>' + m.u + '</span></span>' +
+      '<span class="pill ' + pill[m.s] + '"><span class="dot"></span>' + txt[m.s] + '</span>' +
+    '</li>'
+  )).join('');
+
+  $('#runCycle').addEventListener('click', ()=>{
+    toast('Inference cycle complete', '5 models re-scored 128 active tokens.', 'ok');
+    $('#lastCycle').textContent = clockStr(new Date());
+  });
+})();
+
+/* ============================================================
+   4. WAIT-TIME PREDICTOR + TRIAGE
+   ============================================================ */
+(function predictor(){
+  const dept=$('#dept'), visit=$('#visit'), age=$('#age'), sev=$('#sev');
+  if(!dept) return;
+
+  const baseWait = { cardio:38, ortho:28, genmed:20, peds:15, radio:44 };
+  const visitMul = { new:1.25, follow:0.9, emerg:0.35 };
+  const tone = { Routine:'routine', Urgent:'urgent', Critical:'critical' };
+  const recMap = {
+    Routine : 'Standard queue. Patient will receive an SMS alert 3 slots before their turn.',
+    Urgent  : 'Flagged for priority lane. Queue optimizer will pull this token forward by 2–4 slots.',
+    Critical: 'Fast-track activated. Patient escalated to the emergency bay and doctor notified instantly.'
+  };
+
+  function compute(){
+    const d = dept.value, v = visit.value;
+    const a = +age.value, s = +sev.value;
+
+    $('#ageOut').textContent = a + ' yrs';
+    $('#sevOut').textContent = s + ' / 10';
+
+    let score = s * 7;
+    if(a > 65) score += 18;
+    if(a < 5)  score += 14;
+    if(v === 'emerg') score += 25;
+    score = Math.min(100, score);
+
+    let priority = 'Routine';
+    if(score >= 72) priority = 'Critical';
+    else if(score >= 48) priority = 'Urgent';
+
+    let wait = baseWait[d] * visitMul[v] * (1 - (s - 1) / 16);
+    if(priority === 'Critical') wait *= 0.45;
+    else if(priority === 'Urgent') wait *= 0.72;
+    wait = Math.max(3, Math.round(wait));
+
+    $('#waitVal').innerHTML = wait + '<small>min</small>';
+    $('#scoreVal').innerHTML = score + '<small>/ 100</small>';
+    $('#confVal').textContent = 88 + (s <= 6 ? 4 : 0);
+    $('#laneVal').textContent = priority === 'Critical' ? 'Emergency bay' : priority === 'Urgent' ? 'Priority B' : 'Standard A';
+
+    const badge = $('#prioBadge');
+    badge.textContent = priority;
+    badge.className = 'pill ' + (priority === 'Critical' ? 'pill-danger' : priority === 'Urgent' ? 'pill-warn' : 'pill-ok');
+
+    $('#verdict').dataset.tone = tone[priority];
+    $('#meterFill').style.width = Math.max(10, Math.min(100, 100 - (wait / 60) * 100)) + '%';
+    $('#recText').textContent = recMap[priority];
+  }
+
+  [dept, visit, age, sev].forEach(el => el.addEventListener('input', compute));
+  compute();
+})();
+
+/* ============================================================
+   5. DYNAMIC QUEUE OPTIMIZER
+   ============================================================ */
+(function optimizer(){
+  const list = $('#qList');
+  if(!list) return;
+
+  const seed = [
+    { tk:'A-112', nm:'K. Iyer',    type:'new',    wait:24 },
+    { tk:'A-113', nm:'M. Das',     type:'follow', wait:31 },
+    { tk:'A-114', nm:'S. Nair',    type:'new',    wait:38 },
+    { tk:'A-115', nm:'P. Verma',   type:'new',    wait:44 },
+    { tk:'A-116', nm:'R. Gupta',   type:'follow', wait:52 },
+    { tk:'A-117', nm:'N. Sheikh',  type:'new',    wait:58 }
+  ];
+  let q = JSON.parse(JSON.stringify(seed));
+  let emerg = 0, highlight = null;
+
+  const visitLabel = { new:'New consult', follow:'Follow-up', emerg:'Emergency' };
+  const prioOf = it => it.type === 'emerg' ? ['pill-danger','Emergency'] : it.wait > 45 ? ['pill-warn','Delayed'] : ['pill-ok','Normal'];
+  const statusOf = it => it.type === 'emerg' ? ['pill-danger','Escalated'] : ['pill-neutral','Waiting'];
+
+  function render(animate){
+    if(!q.length){
+      list.innerHTML = '<tr><td class="empty" colspan="7">Queue is clear — no patients waiting.</td></tr>';
+      return;
+    }
+    list.innerHTML = q.map((it, i) => {
+      const p = prioOf(it), st = statusOf(it);
+      return '<tr' + (it.tk === highlight ? ' class="new"' : '') + '>' +
+        '<td class="r num" style="color:var(--muted)">' + (i + 1) + '</td>' +
+        '<td class="tok strong">' + it.tk + '</td>' +
+        '<td class="strong">' + it.nm + '</td>' +
+        '<td class="sub">' + visitLabel[it.type] + '</td>' +
+        '<td class="r num strong">' + it.wait + ' min</td>' +
+        '<td><span class="pill ' + p[0] + '">' + p[1] + '</span></td>' +
+        '<td><span class="pill ' + st[0] + '">' + st[1] + '</span></td>' +
+      '</tr>';
+    }).join('');
+    highlight = null;
+  }
+
+  function bump(){
+    q.forEach(it => { if(it.type !== 'emerg') it.wait += 1; });
+  }
+
+  $$('.toolbar [data-act]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const act = btn.dataset.act;
+
+      if(act === 'emergency'){
+        emerg++;
+        const tk = 'E-' + pad(emerg);
+        q.unshift({ tk, nm:'Emergency case', type:'emerg', wait:0 });
+        for(let i = q.length - 1; i > 0; i--){
+          if(q[i].type === 'new' && q.length > 4){ q.splice(i, 1); break; }
+        }
+        highlight = tk;
+        $('#boardEsc').textContent = 6 + emerg;
+        toast('Emergency escalated', 'Token ' + tk + ' jumped the queue; 1 routine slot displaced.', 'danger');
+      }
+
+      if(act === 'cancel'){
+        const idx = q.findIndex((it, i) => i > 0 && it.type !== 'emerg');
+        if(idx > -1){
+          const rm = q.splice(idx, 1)[0];
+          bump();
+          render();
+          toast('Cancellation recorded', rm.tk + ' (' + rm.nm + ') removed. Remaining wait times updated.', 'warn');
+        } else {
+          render();
+          toast('No cancellable slot', 'Only emergency tokens remain in the queue.', 'warn');
+        }
+        return;
+      }
+
+      if(act === 'early'){
+        const idx = q.findIndex(it => it.type === 'follow');
+        if(idx > 1){
+          const [it] = q.splice(idx, 1);
+          q.splice(Math.max(1, idx - 2), 0, it);
+          highlight = it.tk;
+          render();
+          toast('Early consult accepted', it.tk + ' (' + it.nm + ') moved forward 2 slots.', 'ok');
+        } else {
+          render();
+          toast('No follow-up found', 'No eligible follow-up token to pull forward.', 'warn');
+        }
+        return;
+      }
+
+      if(act === 'delay'){
+        bump();
+        render();
+        toast('Doctor delay logged', 'All waiting tokens +1 min (10 min consult overrun).', 'warn');
+        return;
+      }
+
+      if(act === 'reset'){
+        q = JSON.parse(JSON.stringify(seed));
+        emerg = 0;
+        $('#boardEsc').textContent = 6;
+        render();
+        toast('Queue reset', 'Baseline queue restored.', 'info');
+      }
+    });
+  });
+
+  render();
+  setInterval(()=>{ if($('#view-ai').classList.contains('is-active')){ bump(); render(); } }, 20000);
+})();
+
+/* ============================================================
+   6. CROWD & DEMAND FORECASTER
+   ============================================================ */
+(function forecast(){
+  const host = $('#forecastBars');
+  if(!host) return;
+  const data = [
+    { h:'15:00', v:38 }, { h:'16:00', v:44 }, { h:'17:00', v:41 },
+    { h:'18:00', v:33 }, { h:'19:00', v:26 }, { h:'20:00', v:19 },
+    { h:'21:00', v:14 }, { h:'22:00', v:11 }, { h:'23:00', v:8 }
+  ];
+  const max = Math.max.apply(null, data.map(d => d.v));
+  const peak = data.reduce((a, b) => b.v > a.v ? b : a);
+  host.innerHTML = data.map(d => (
+    '<div class="bar-col' + (d.v === max ? ' peak' : '') + '">' +
+      '<span class="val num">' + d.v + '</span>' +
+      '<span class="bar" style="height:' + Math.round(d.v / max * 100) + '%"></span>' +
+      '<span class="lab">' + d.h + '</span>' +
+    '</div>'
+  )).join('');
+})();
+
+/* ============================================================
+   7. SMART RESOURCE ALLOCATOR
+   ============================================================ */
+(function allocator(){
+  const list = $('#allocList');
+  if(!list) return;
+  const rows = [
+    { n:'Counter 5 opened',        d:'Triggered by load index 92 at Orthopaedics',  at:'14:02', s:'ok',   t:'Applied' },
+    { n:'+1 nurse, Front Desk B',  d:'Forecast peak 15:00 – 16:00',                 at:'13:40', s:'ok',   t:'Applied' },
+    { n:'Counter 3 → overflow',    d:'Post-discharge cluster from Ward 4B',          at:'12:18', s:'warn', t:'Watch' },
+    { n:'+1 phlebotomist',         d:'Radiology arrivals above 90th percentile',     at:'—',     s:'neutral', t:'Queued' }
+  ];
+  const pill = { ok:'pill-ok', warn:'pill-warn', danger:'pill-danger', neutral:'pill-neutral' };
+  function render(){
+    list.innerHTML = rows.map(r => (
+      '<li>' +
+        '<span class="row-ic"><svg><use href="#i-bolt"/></svg></span>' +
+        '<span class="row-txt"><b>' + r.n + '</b><span>' + r.d + '</span></span>' +
+        '<span class="row-val"><b class="num">' + r.at + '</b><span>auto</span></span>' +
+        '<span class="pill ' + pill[r.s] + '">' + r.t + '</span>' +
+      '</li>'
+    )).join('');
+  }
+  render();
+  $('#spikeBtn').addEventListener('click', ()=>{
+    const t = clockStr(new Date()).slice(0, 5);
+    rows.unshift({
+      n:'Counter 5 surge staffing',
+      d:'Simulated spike · load index 97 at General Medicine',
+      at:t, s:'warn', t:'Applied'
+    });
+    render();
+    toast('Resource action applied', 'Counter 5 surge staffing triggered automatically.', 'warn');
+  });
+})();
+
+/* ============================================================
+   8. DIGITAL TOKEN GENERATION
+   ============================================================ */
+(function tokens(){
+  const list = $('#tokenList');
+  if(!list) return;
+
+  let seq = 118;
+  let channel = 'App';
+
+  const rows = [
+    { tk:'A-118', nm:'V. Krishnan', ch:'App',      dept:'General Medicine', vs:'Follow-up',    wait:28, s:'Waiting' },
+    { tk:'A-117', nm:'N. Sheikh',    ch:'Kiosk',    dept:'Orthopaedics',     vs:'New consult',  wait:36, s:'Waiting' },
+    { tk:'A-116', nm:'R. Gupta',     ch:'Web',      dept:'Cardiology',       vs:'Follow-up',    wait:44, s:'Waiting' },
+    { tk:'A-115', nm:'P. Verma',     ch:'QR scan',  dept:'Radiology',        vs:'New consult',  wait:51, s:'Alerts sent' },
+    { tk:'A-114', nm:'S. Nair',      ch:'Walk-in',  dept:'General Medicine', vs:'New consult',  wait:58, s:'Waiting' }
+  ];
+  const statusPill = s => s === 'In consult' ? 'pill-info' : s === 'Alerts sent' ? 'pill-warn' : s === 'No-show' ? 'pill-danger' : 'pill-neutral';
+
+  function render(){
+    list.innerHTML = rows.length
+      ? rows.map(r => (
+        '<tr>' +
+          '<td class="tok strong">' + r.tk + '</td>' +
+          '<td class="strong">' + r.nm + '</td>' +
+          '<td><span class="tag">' + r.ch + '</span></td>' +
+          '<td class="sub">' + r.dept + '</td>' +
+          '<td class="sub">' + r.vs + '</td>' +
+          '<td class="r num strong">' + r.wait + ' min</td>' +
+          '<td><span class="pill ' + statusPill(r.s) + '">' + r.s + '</span></td>' +
+        '</tr>'
+      )).join('')
+      : '<tr><td class="empty" colspan="7">No tokens issued yet.</td></tr>';
+  }
+
+  function refreshNext(){
+    const next = 'A-' + (seq + 1);
+    $('#nextToken').textContent = next;
+    $('#queueName').textContent = $('#ptDept').value;
+    $('#turnEta').innerHTML = '~' + (18 + seq % 9) + ' <small>min</small>';
+  }
+
+  function issue(ch, name, deptName, visitName){
+    seq++;
+    const tk = (visitName === 'Emergency' ? 'E-' : 'A-') + seq;
+    const est = 16 + (seq % 11) * 3;
+    rows.unshift({ tk, nm:name, ch, dept:deptName, vs:visitName, wait:est, s:'Waiting' });
+    render();
+    refreshNext();
+    $('#ptIssued').textContent = 412 + rows.length;
+    $('#tkMine').textContent = tk;
+    toast('Token issued · ' + tk, name + ' · ' + ch + ' · alerts scheduled 3 slots before turn.', 'ok');
+  }
+
+  $('#channelSeg').addEventListener('click', e => {
+    const b = e.target.closest('.seg-opt');
+    if(!b) return;
+    $$('#channelSeg .seg-opt').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    channel = b.dataset.ch;
+  });
+
+  $('#issueBtn').addEventListener('click', () => {
+    const name = $('#ptName').value.trim() || 'Walk-in patient';
+    issue(channel, name, $('#ptDept').value, $('#ptVisit').value);
+  });
+
+  $('#issueWalkBtn').addEventListener('click', () => {
+    const name = $('#ptName').value.trim() || 'Walk-in patient';
+    addWalkin(name, 'Counter 2 walk-in');
+    issue('Walk-in', name, $('#ptDept').value, $('#ptVisit').value);
+  });
+
+  $('#ptDept').addEventListener('change', refreshNext);
+  render();
+  refreshNext();
+})();
+
+/* ============================================================
+   9. LIVE QUEUE TRACKER
+   ============================================================ */
+(function tracker(){
+  const nowEl = $('#tkNow');
+  if(!nowEl) return;
+
+  const START_NOW = 111, START_AHEAD = 7;
+  let ahead = START_AHEAD;
+
+  function paint(){
+    const nowToken = START_NOW + (START_AHEAD - ahead);
+    nowEl.textContent = 'A-' + nowToken;
+    $('#tkAhead').textContent = ahead === 0 ? 'Your turn now' : ahead + ' patient' + (ahead === 1 ? '' : 's') + ' ahead';
+    $('#tkEta').textContent = ahead === 0 ? 'Proceed now' : '~' + (ahead * 4) + ' min';
+    $('#tkBar').style.width = Math.min(100, ((START_AHEAD - ahead + 1) / (START_AHEAD + 1)) * 100) + '%';
+
+    const steps = [
+      { t:'Token issued via mobile app', when:'13:04', done:true },
+      { t:'Checked in at reception desk', when:'13:26', done:true },
+      { t:'Added to General Medicine queue', when:'13:29', done:true },
+      { t:'In consult with a doctor', when: ahead <= 2 ? 'now' : '—', done: ahead <= 1, now: ahead === 2 },
+      { t:'Consult closed & prescription issued', when:'—' }
+    ];
+    $('#tkSteps').innerHTML = steps.map((s, i) => (
+      '<div class="trk-step' + (s.done ? ' done' : '') + (s.now ? ' now' : '') + '">' +
+        '<span class="n">' + (s.done ? '✓' : i + 1) + '</span>' +
+        '<span class="t">' + s.t + '</span>' +
+        '<span class="when">' + s.when + '</span>' +
+      '</div>'
+    )).join('');
+  }
+
+  paint();
+  setInterval(()=>{
+    if(!$('#view-patients').classList.contains('is-active')) return;
+    ahead = ahead <= 0 ? START_AHEAD : ahead - 1;
+    if(ahead === 3) pushAlert('3 slots before turn');
+    if(ahead === 0) pushAlert('Turn called — proceed to Room 204');
+    paint();
+  }, 6000);
+})();
+
+/* ============================================================
+   10. AUTOMATED ALERTS
+   ============================================================ */
+(function alerts(){
+  const list = $('#alertList');
+  if(!list) return;
+
+  const rows = [
+    { at:'14:22:10', tk:'A-115', ch:'SMS',   trg:'3 slots before turn',       n:3,  s:'Delivered' },
+    { at:'14:19:44', tk:'A-114', ch:'Push',  trg:'Queue position changed',    n:6,  s:'Delivered' },
+    { at:'14:12:05', tk:'A-116', ch:'SMS',   trg:'Consult starting soon',     n:2,  s:'Delivered' },
+    { at:'14:08:51', tk:'A-117', ch:'WhatsApp', trg:'Room change → Room 204', n:4, s:'Delivered' },
+    { at:'13:58:32', tk:'A-113', ch:'Push',  trg:'Doctor available',          n:1,  s:'Delivered' },
+    { at:'13:51:09', tk:'A-112', ch:'SMS',   trg:'Delay notice (+10 min)',    n:3,  s:'Failed' }
+  ];
+  const pill = s => s === 'Delivered' ? 'pill-ok' : 'pill-danger';
+
+  function render(){
+    list.innerHTML = rows.map(r => (
+      '<tr>' +
+        '<td class="num sub">' + r.at + '</td>' +
+        '<td class="tok strong">' + r.tk + '</td>' +
+        '<td><span class="tag">' + r.ch + '</span></td>' +
+        '<td class="sub">' + r.trg + '</td>' +
+        '<td class="r num strong">' + r.n + '</td>' +
+        '<td><span class="pill ' + pill(r.s) + '">' + r.s + '</span></td>' +
+      '</tr>'
+    )).join('');
+  }
+
+  pushAlert = function(trigger){
+    const tk = $('#tkMine').textContent;
+    rows.unshift({ at:clockStr(new Date()), tk, ch:'SMS', trg, n:3, s:'Delivered' });
+    render();
+    $('#ptAlerts').textContent = 388 + rows.length;
+    toast('Alert delivered', 'SMS to ' + tk + ' · ' + trigger, 'ok');
+  };
+
+  render();
+})();
+
+/* ============================================================
+   11. ABHA / ABDM
+   ============================================================ */
+(function abha(){
+  const out = $('#abhaOut');
+  const btn = $('#abhaBtn');
+  if(!out) return;
+
+  const record = {
+    name:'Ananya Sharma', abha:'14-2287-4610-9931', dob:'14 Mar 1992', sex:'Female',
+    phone:'+91 98••• ••412', visits:6, last:'Cardiology · 12 Feb 2025',
+    allergy:'Penicillin (rash)', abdm:'Verified against ABDM sandbox'
+  };
+
+  function showRecord(){
+    out.innerHTML =
+      '<div class="rec-card">' +
+        '<div class="rec-top">' +
+          '<span class="row-ic"><svg><use href="#i-id"/></svg></span>' +
+          '<b>' + record.name + '</b>' +
+          '<span class="pill pill-ok"><span class="dot"></span>Verified</span>' +
+          '<span class="id num">ABHA ' + record.abha + '</span>' +
+        '</div>' +
+        '<div class="rec-grid">' +
+          '<div><div class="k">Date of birth</div><div class="v num">' + record.dob + '</div></div>' +
+          '<div><div class="k">Gender</div><div class="v">' + record.sex + '</div></div>' +
+          '<div><div class="k">Mobile</div><div class="v num">' + record.phone + '</div></div>' +
+          '<div><div class="k">Prior visits</div><div class="v num">' + record.visits + ' visits</div></div>' +
+          '<div><div class="k">Last consultation</div><div class="v">' + record.last + '</div></div>' +
+          '<div><div class="k">Allergy alert</div><div class="v" style="color:var(--danger)">' + record.allergy + '</div></div>' +
+        '</div>' +
+        '<div style="padding:12px 16px;border-top:1px solid var(--line);font-size:.74rem;color:var(--muted)">' + record.abdm + '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">' +
+        '<button class="btn btn-primary" id="abhaCheckin"><svg><use href="#i-check"/></svg>Create encounter</button>' +
+        '<button class="btn" id="abhaRescan">Scan another ID</button>' +
+      '</div>';
+
+    $('#abhaCheckin').addEventListener('click', ()=>{
+      toast('Encounter created', 'ABHA record linked to today’s OPD visit.', 'ok');
+      $('#abhaCheckin').disabled = true;
+    });
+    $('#abhaRescan').addEventListener('click', ()=>{ out.innerHTML = hint(); btn.disabled = false; });
+  }
+
+  function hint(){
+    return '<div class="scan-hint"><svg><use href="#i-qr"/></svg>Point the kiosk or phone camera at the patient’s ABHA QR code to pull their health record in one tap.</div>';
+  }
+
+  out.innerHTML = hint();
+
+  btn.addEventListener('click', ()=>{
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin"></span>Scanning…';
+    setTimeout(()=>{
+      btn.disabled = false;
+      btn.innerHTML = '<svg><use href="#i-qr"/></svg>Scan &amp; Share';
+      showRecord();
+      toast('ABHA record fetched', 'Demographics pulled in 0.8s from ABDM.', 'ok');
+    }, 1100);
+  });
+
+  $('#abhaJump').addEventListener('click', ()=>{
+    location.hash = '#/patients';
+    setTimeout(()=>{ btn.scrollIntoView({ block:'center', behavior:'smooth' }); btn.focus(); }, 60);
+  });
+})();
+
+/* ============================================================
+   12. DOCTOR CONSOLE
+   ============================================================ */
+(function doctor(){
+  const list = $('#docList');
+  if(!list) return;
+
+  let queue = [
+    { tk:'A-111', nm:'R. Sharma',   vs:'Follow-up',   wait:0,  s:'in' },
+    { tk:'A-112', nm:'K. Iyer',     vs:'New consult', wait:34, s:'wait' },
+    { tk:'A-113', nm:'M. Das',      vs:'New consult', wait:41, s:'wait' },
+    { tk:'A-114', nm:'S. Nair',     vs:'Follow-up',   wait:47, s:'wait' },
+    { tk:'A-115', nm:'P. Verma',   vs:'New consult', wait:53, s:'wait' }
+  ];
+
+  const statusPill = s => s === 'in' ? 'pill-info' : s === 'done' ? 'pill-ok' : s === 'noshow' ? 'pill-danger' : 'pill-neutral';
+  const statusText = s => s === 'in' ? 'In consult' : s === 'done' ? 'Completed' : s === 'noshow' ? 'No-show' : 'Waiting';
+
+  function render(){
+    if(!queue.length){
+      list.innerHTML = '<tr><td class="empty" colspan="7">No patients in this shift list.</td></tr>';
+      return;
+    }
+    list.innerHTML = queue.map((p, i) => (
+      '<tr' + (p.s === 'in' ? ' class="is-active"' : '') + '>' +
+        '<td class="r num" style="color:var(--muted)">' + (i + 1) + '</td>' +
+        '<td class="tok strong">' + p.tk + '</td>' +
+        '<td class="strong">' + p.nm + '</td>' +
+        '<td class="sub">' + p.vs + '</td>' +
+        '<td class="r num strong">' + (p.s === 'in' ? '—' : p.wait + ' min') + '</td>' +
+        '<td><span class="pill ' + statusPill(p.s) + '">' + statusText(p.s) + '</span></td>' +
+        '<td class="r">' + (p.s === 'wait'
+          ? '<button class="btn btn-sm" data-call="' + p.tk + '">Call</button>'
+          : '') + '</td>' +
+      '</tr>'
+    )).join('');
+  }
+
+  list.addEventListener('click', e => {
+    const b = e.target.closest('[data-call]');
+    if(!b) return;
+    const p = queue.find(x => x.tk === b.dataset.call);
+    if(!p) return;
+    queue.forEach(x => { if(x.s === 'in') x.s = 'done'; });
+    p.s = 'in';
+    render();
+    toast('Patient called', p.tk + ' · ' + p.nm + ' called into Room 204.', 'ok');
+  });
+
+  $('#callNext').addEventListener('click', ()=>{
+    const inIdx = queue.findIndex(p => p.s === 'in');
+    if(inIdx > -1) queue.splice(inIdx, 1);
+    const next = queue.find(p => p.s === 'wait');
+    if(next){
+      next.s = 'in';
+      render();
+      toast('Next patient called', next.tk + ' · ' + next.nm, 'ok');
+    } else {
+      render();
+      toast('No patients waiting', 'The shift list is clear.', 'warn');
+    }
+  });
+
+  $('#logDelay').addEventListener('click', ()=>{
+    queue.forEach(p => { if(p.s === 'wait') p.wait += 10; });
+    render();
+    toast('Delay logged', '+10 min added to all waiting patients; alerts re-queued.', 'warn');
+  });
+
+  $('#noShow').addEventListener('click', ()=>{
+    const idx = queue.findIndex(p => p.s === 'wait');
+    if(idx > -1){
+      const p = queue.splice(idx, 1)[0];
+      render();
+      toast('Marked no-show', p.tk + ' · ' + p.nm + ' removed and slot released.', 'warn');
+    } else {
+      toast('No waiting patients', 'Nothing to mark as no-show.', 'warn');
+    }
+  });
+
+  $('#completeVisit').addEventListener('click', ()=>{
+    const idx = queue.findIndex(p => p.s === 'in');
+    if(idx > -1){
+      const p = queue.splice(idx, 1)[0];
+      render();
+      toast('Consult completed', p.tk + ' · ' + p.nm + ' marked complete in HIMS.', 'ok');
+    } else {
+      toast('No active consult', 'Call a patient before completing.', 'warn');
+    }
+  });
+
+  render();
+  setInterval(()=>{
+    if(!$('#view-staff').classList.contains('is-active')) return;
+    queue.forEach(p => { if(p.s === 'wait') p.wait += 1; });
+    render();
+  }, 15000);
+})();
+
+/* ============================================================
+   13. RECEPTION & KIOSK HUB
+   ============================================================ */
+(function reception(){
+  const list = $('#walkinList');
+  if(!list) return;
+
+  let seq = 41;
+  let rows = [
+    { nm:'G. Menon',   rs:'Fever · 3 days', w:14 },
+    { nm:'T. Balan',   rs:'Follow-up',       w:9 },
+    { nm:'L. Fernandes', rs:'Knee pain',    w:6 }
+  ];
+
+  function render(){
+    list.innerHTML = rows.length
+      ? rows.map(r => (
+        '<tr>' +
+          '<td class="strong">' + r.nm + '</td>' +
+          '<td class="sub">' + r.rs + '</td>' +
+          '<td class="r num strong">' + r.w + ' min</td>' +
+          '<td class="r"><button class="btn btn-sm" data-issue="' + r.nm + '">Token</button></td>' +
+        '</tr>'
+      )).join('')
+      : '<tr><td class="empty" colspan="4">No walk-ins at the desk.</td></tr>';
+  }
+
+  addWalkin = function(name, reason){
+    seq++;
+    rows.unshift({ nm:name, rs:reason, w:2 });
+    render();
+  };
+
+  list.addEventListener('click', e => {
+    const b = e.target.closest('[data-issue]');
+    if(!b) return;
+    const i = rows.findIndex(r => r.nm === b.dataset.issue);
+    if(i > -1){
+      const r = rows.splice(i, 1)[0];
+      render();
+      toast('Manual token issued', r.nm + ' added to the department queue.', 'ok');
+    }
+  });
+
+  $('#addWalkin').addEventListener('click', ()=>{
+    const pool = ['H. Qureshi', 'A. Bose', 'D. Pillai', 'S. Rane', 'J. Thomas'];
+    const name = pool[Math.floor(Math.random() * pool.length)];
+    addWalkin(name, 'Counter 2 walk-in');
+    toast('Walk-in added', name + ' checked in at the desk.', 'info');
+  });
+
+  render();
+})();
+
+/* ============================================================
+   14. HIMS / EHR SYNC
+   ============================================================ */
+(function ehr(){
+  const list = $('#ehrList');
+  if(!list) return;
+
+  let rows = [
+    { s:'Hospital HIMS',   d:'Bi-dir', t:'14:31:52', n:386, st:'ok' },
+    { s:'ABDM / ABHA',     d:'Out',    t:'14:30:18', n:164, st:'ok' },
+    { s:'Lab & Diagnostics', d:'Out',  t:'14:28:40', n:212, st:'ok' },
+    { s:'Pharmacy',        d:'In',     t:'14:12:07', n:341, st:'warn' }
+  ];
+  const pill = { ok:'pill-ok', warn:'pill-warn', danger:'pill-danger' };
+  const txt  = { ok:'Synced', warn:'Delayed', danger:'Error' };
+
+  function render(){
+    list.innerHTML = rows.map(r => (
+      '<tr>' +
+        '<td class="strong">' + r.s + '</td>' +
+        '<td><span class="tag">' + r.d + '</span></td>' +
+        '<td class="r num sub">' + r.t + '</td>' +
+        '<td class="r num strong">' + r.n + '</td>' +
+        '<td><span class="pill ' + pill[r.st] + '">' + txt[r.st] + '</span></td>' +
+      '</tr>'
+    )).join('');
+  }
+
+  render();
+  list.addEventListener('click', e => {
+    const tr = e.target.closest('tr');
+    if(!tr) return;
+    const name = tr.firstElementChild.textContent;
+    toast('Sync requested', 'Pulling latest queue status from ' + name + '.', 'info');
+    setTimeout(()=>{
+      const r = rows.find(x => x.s === name);
+      if(r){ r.t = clockStr(new Date()); r.st = 'ok'; render(); toast('Sync complete', name + ' · ' + r.n + ' records up to date.', 'ok'); }
+    }, 1200);
+  });
+
+  setInterval(()=>{
+    if(!$('#view-staff').classList.contains('is-active')) return;
+    rows.forEach(r => r.t = clockStr(new Date()));
+    render();
+  }, 45000);
+})();
+
+/* ============================================================
+   15. CONGESTION HEATMAP
+   ============================================================ */
+(function heatmap(){
+  const grid = $('#hmGrid');
+  if(!grid) return;
+
+  const depts = ['Emergency','General Medicine','Cardiology','Orthopaedics','Paediatrics','Radiology'];
+  const hours = [9,10,11,12,13,14,15,16,17];
+  const peakHour = { 'Emergency':12, 'General Medicine':11, 'Cardiology':10, 'Orthopaedics':15, 'Paediatrics':10, 'Radiology':13 };
+
+  const data = depts.map(d => hours.map(h => {
+    const dist = Math.abs(h - peakHour[d]);
+    return Math.max(6, Math.min(100, 88 - dist * 10 + (Math.random() * 14 - 7)));
+  }));
+
+  /* cool-to-hot ramp: pale blue → blue rgb(58,134,255) → lilac rgb(189,178,255) → pink rgb(255,214,224) */
+  const RAMP = [
+    [0.00, [224, 234, 255]],
+    [0.30, [172, 202, 255]],
+    [0.55, [122, 168, 255]],
+    [0.75, [58, 134, 255]],
+    [0.88, [189, 178, 255]],
+    [1.00, [255, 214, 224]]
+  ];
+  const rgb = v => {
+    v = Math.max(0, Math.min(100, v)) / 100;
+    for(let i = 1; i < RAMP.length; i++){
+      if(v <= RAMP[i][0]){
+        const [p0, c0] = RAMP[i - 1], [p1, c1] = RAMP[i];
+        const t = (v - p0) / (p1 - p0 || 1);
+        return 'rgb(' + c0.map((c, k) => Math.round(c + (c1[k] - c) * t)).join(',') + ')';
+      }
+    }
+    const c = RAMP[RAMP.length - 1][1];
+    return 'rgb(' + c.join(',') + ')';
+  };
+
+  function build(){
+    grid.style.gridTemplateColumns = '132px repeat(' + hours.length + ', minmax(34px, 1fr))';
+    let html = '<div></div>';
+    html += hours.map(h => '<div class="hm-h">' + (h > 12 ? (h - 12) + 'p' : h + 'a') + '</div>').join('');
+    data.forEach((row, r) => {
+      html += '<div class="hm-r">' + depts[r] + '</div>';
+      html += row.map(v => '<div class="hm-cell" style="background:' + rgb(v) + '"></div>').join('');
+    });
+    grid.innerHTML = html;
+    paintTitles();
+  }
+
+  function paintTitles(){
+    let i = 0;
+    $$('.hm-cell', grid).forEach(cell => {
+      const r = Math.floor(i / hours.length), c = i % hours.length;
+      cell.title = depts[r] + ' · ' + hours[c] + ':00 — ' + Math.round(data[r][c]) + '% load';
+      i++;
+    });
+  }
+
+  $('#hmLegend').innerHTML = [0, 25, 50, 75, 100].map(v => '<i style="background:' + rgb(v) + '"></i>').join('');
+
+  build();
+  setInterval(()=>{
+    let best = { d:'', h:0, v:0 }, i = 0;
+    $$('.hm-cell', grid).forEach(cell => {
+      const r = Math.floor(i / hours.length), c = i % hours.length;
+      data[r][c] = Math.max(4, Math.min(100, data[r][c] + (Math.random() * 8 - 4)));
+      cell.style.background = rgb(data[r][c]);
+      cell.title = depts[r] + ' · ' + hours[c] + ':00 — ' + Math.round(data[r][c]) + '% load';
+      if(data[r][c] > best.v) best = { d:depts[r], h:hours[c], v:data[r][c] };
+      i++;
+    });
+    $('#hmPeak').textContent = 'Peak: ' + best.d + ' · ' + (best.h > 12 ? (best.h - 12) + 'p' : best.h + 'a') + ' · ' + Math.round(best.v) + '%';
+  }, 4000);
+})();
+
+/* ============================================================
+   16. FEEDBACK SCORES
+   ============================================================ */
+(function feedback(){
+  const host = $('#fbRows');
+  if(!host) return;
+
+  const rows = [
+    { t:'Staff courtesy',            s:4.7, p:94, cls:'' },
+    { t:'Waiting time accuracy',    s:4.6, p:92, cls:'' },
+    { t:'Doctor consultation time',  s:4.4, p:88, cls:'' },
+    { t:'Token & app experience',   s:4.3, p:86, cls:'' },
+    { t:'Reception & kiosk',        s:4.1, p:82, cls:'' },
+    { t:'Pharmacy & billing handoff', s:3.8, p:76, cls:'warn' },
+    { t:'Cleanliness & wayfinding', s:3.6, p:72, cls:'poor' }
+  ];
+
+  host.innerHTML = rows.map(r => (
+    '<div class="mrow ' + r.cls + '">' +
+      '<div class="mrow-top"><b>' + r.t + '</b>' +
+        '<span class="dl ' + (r.cls ? 'dn' : 'up') + '">' + (r.cls ? '▼' : '▲') + ' ' + r.s + '</span>' +
+        '<span class="sc">' + r.s.toFixed(1) + '</span>' +
+      '</div>' +
+      '<div class="track"><i data-w="' + r.p + '%"></i></div>' +
+    '</div>'
+  )).join('');
+
+  const fills = $$('.track i', host);
+  fills.forEach(f => { f.style.width = '0%'; });
+  const io = new IntersectionObserver(es => {
+    es.forEach(e => {
+      if(e.isIntersecting){
+        e.target.style.width = e.target.dataset.w;
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold:.35 });
+  fills.forEach(f => io.observe(f));
+})();
+
+/* ============================================================
+   17. BOTTLENECK RANKING
+   ============================================================ */
+(function bottlenecks(){
+  const list = $('#bnList');
+  if(!list) return;
+
+  const rows = [
+    { t:'Pharmacy handoff',   d:'Billing desk wait · avg 22 min', n:186, s:'danger', p:'High' },
+    { t:'Wayfinding to OPD',   d:'Signage complaints · Ward 4B',    n:142, s:'warn',   p:'Medium' },
+    { t:'Lab report release',  d:'Reports pending > 4 hours',      n:97,  s:'warn',   p:'Medium' },
+    { t:'Kiosk token print',   d:'Printer jams at Counter 2',      n:41,  s:'neutral', p:'Low' },
+    { t:'Follow-up recall',    d:'Missed recall SMS delivery',     n:33,  s:'neutral', p:'Low' }
+  ];
+  const pill = { danger:'pill-danger', warn:'pill-warn', neutral:'pill-neutral' };
+
+  list.innerHTML = rows.map(r => (
+    '<li>' +
+      '<span class="row-ic"><svg><use href="#i-alert"/></svg></span>' +
+      '<span class="row-txt"><b>' + r.t + '</b><span>' + r.d + '</span></span>' +
+      '<span class="row-val"><b class="num">' + r.n + '</b><span>patients</span></span>' +
+      '<span class="pill ' + pill[r.s] + '">' + r.p + '</span>' +
+    '</li>'
+  )).join('');
+})();
+
+/* ============================================================
+   18. EXPORT
+   ============================================================ */
+(function exportReport(){
+  const btn = $('#exportBtn');
+  if(!btn) return;
+  btn.addEventListener('click', ()=>{
+    toast('Report queued', 'Congestion + feedback export will be emailed to you.', 'ok');
+  });
+  $('#notifBtn').addEventListener('click', ()=>{
+    toast('3 unread notifications', 'Counter 5 auto-opened · Pharmacy sync delayed · E-01 escalation.', 'info');
+  });
+})();
+</script>
+</body>
+</html>
