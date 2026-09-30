@@ -1,25 +1,140 @@
-version: '3.8'
+name: smartqueue
+
 services:
-  backend:
-    build: ./backend
-    ports:
-      - "5000:5000"
-    environment:
-      - DB_HOST=db
-      - AI_SERVICE_URL=http://ai_service:8000
-    depends_on:
-      - db
-      - ai_service
-
-  ai_service:
-    build: ./ai_service
-    ports:
-      - "8000:8000"
-
   db:
     image: mysql:8.0
+    container_name: smartqueue-db
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: ai_orchestra
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-smartqueue}
+      MYSQL_USER: ${MYSQL_USER:-smartqueue}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-smartqueue}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
     ports:
-      - "3306:3306"
+      - "${DB_PORT_FORWARD:-3306}:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-rootpassword}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    networks: [smartqueue]
+
+  ai_service:
+    build:
+      context: ./ai_service
+    container_name: smartqueue-ai
+    restart: unless-stopped
+    environment:
+      ARTIFACTS_DIR: /app/artifacts
+      AUTO_TRAIN_ON_BOOT: "true"
+      RETRAIN_TOKEN: ${RETRAIN_TOKEN:-dev-retrain-token}
+    volumes:
+      - ml_artifacts:/app/artifacts
+    expose:
+      - "8000"
+    ports:
+      - "${AI_PORT_FORWARD:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
+      interval: 20s
+      timeout: 10s
+      retries: 6
+      start_period: 90s
+    networks: [smartqueue]
+
+  backend:
+    build:
+      context: ./backend
+    container_name: smartqueue-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      ai_service:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      TZ: ${TZ:-Asia/Kolkata}
+      TRUST_PROXY: "true"
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: ${MYSQL_USER:-smartqueue}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-smartqueue}
+      DB_NAME: ${MYSQL_DATABASE:-smartqueue}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-dev-access-secret-change-me}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev-refresh-secret-change-me}
+      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-15m}
+      JWT_REFRESH_TTL_DAYS: ${JWT_REFRESH_TTL_DAYS:-7}
+      AI_SERVICE_URL: http://ai_service:8000
+      AI_SERVICE_TIMEOUT_MS: ${AI_SERVICE_TIMEOUT_MS:-4000}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
+      FCM_PROJECT_ID: ${FCM_PROJECT_ID:-}
+      FCM_CLIENT_EMAIL: ${FCM_CLIENT_EMAIL:-}
+      FCM_PRIVATE_KEY: ${FCM_PRIVATE_KEY:-}
+      NOTIFY_PEOPLE_AHEAD: ${NOTIFY_PEOPLE_AHEAD:-3}
+    expose:
+      - "5000"
+    ports:
+      - "${API_PORT_FORWARD:-5000}:5000"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:5000/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks: [smartqueue]
+
+  dashboard:
+    build:
+      context: ./dashboard
+    container_name: smartqueue-dashboard
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "${DASHBOARD_PORT_FORWARD:-8080}:80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      retries: 4
+    networks: [smartqueue]
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: smartqueue-nginx
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_started
+      dashboard:
+        condition: service_started
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infra/nginx/proxy_params_smartqueue.conf:/etc/nginx/proxy_params_smartqueue.conf:ro
+      - ./infra/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./infra/certbot/conf:/etc/letsencrypt:ro
+      - ./infra/certbot/www:/var/www/certbot:ro
+    networks: [smartqueue]
+
+volumes:
+  db_data:
+  ml_artifacts:
+
+networks:
+  smartqueue:
+    driver: bridge
